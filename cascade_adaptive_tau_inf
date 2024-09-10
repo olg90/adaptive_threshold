@@ -35,7 +35,9 @@ def run_test(f, k, M, pr, c, vth, tauv, tauvth, vthb, cvth, alpha, cv,
                     b=np.random.binomial(M, pr)#np.random.choice([120,50]) # Number released
                     vs[i+1]=b
     Tmeans=[np.mean(np.diff(AP_times[i])) for i in range(nnum)]
-    CVT2s=[np.var(np.diff(AP_times[i]))/np.mean(np.diff(AP_times[i]))**2 for i in range(nnum)]
+    
+    CVT2s=[np.var(np.diff(AP_times[i]))/np.mean(np.diff(AP_times[i]))**2 \
+           for i in range(nnum)]
     return thists, vhists, AP_times, Tmeans, CVT2s
 
 ###############################################################################
@@ -59,9 +61,10 @@ alpha=0
 cv=0.1
 
 nnum = 11 # num neurons in sequence
-tmax = 100 # 30
+tmax = 300 # 30
 
 delta_t = 0.001
+
 # =============================================================================
 # resa = run_test(f, k, M, pr, c, vth, tauv, tauvth, vthb, cvth, alpha, cv, nnum, delta_t, tmax)
 # 
@@ -73,7 +76,8 @@ delta_t = 0.001
 # plt.legend()
 # #%%
 # =============================================================================
-navgs=1
+
+navgs=100
 T=[]
 CVT2=[]
 
@@ -90,19 +94,9 @@ CVT2=np.array(CVT2)
 T=np.mean(T, 0)
 CVT2=np.mean(CVT2,0)
 
-fbx=ss.binom.cdf(vth, M, pr)#0.5
+fbx=ss.binom.cdf(vth, M, pr)
 cv0=1
 tm0=1/f
-
-# =============================================================================
-# cv0=1/2
-# tm0=2/f
-# =============================================================================
-# =============================================================================
-# fbx=ss.geom.cdf(vth, pg)
-# cv0=1
-# tm0=1/f
-# =============================================================================
 
 def getceq(n, fbx, cv0):
     return 1+(1-fbx)**n*(cv0-1)
