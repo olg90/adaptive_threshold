@@ -16,7 +16,7 @@ def run_test(f, k, M, pr, c, vth, tauv, tauvth, vthb, cvth, alpha, cv,
     vths= vthb*np.ones(nnum)
     timer = delta_t
     
-    shape=2
+    shape=1
     scale=1/f
     timer0=np.random.exponential(1/f)
     
