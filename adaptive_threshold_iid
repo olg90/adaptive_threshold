@@ -1,0 +1,636 @@
+import numpy as np
+from matplotlib.pyplot import plot as pt
+import matplotlib.pyplot as plt
+from numpy.random import exponential, binomial, gamma
+from numpy import exp
+
+
+def simulate(n, v, f, pr, M, k, c, vth, tauv, tauvth, vthb, cvth, cv, alpha, tmax, delta_t):
+
+    nlist=[]
+    vlist=[]
+    vthlist=[]
+    tlist=[]
+    prelist=[]
+    postlist=[]
+
+    tplot=[]
+    vplot=[]
+    nplot=[]
+    vthplot=[]
+
+    postvth=[]
+
+    tcurr=0
+    ratio = 0
+    timer = delta_t
+    while tcurr < tmax:
+        t0=exponential(1/f) # action potential
+        t1=exponential(1/(k*(M-n) + 1e-6)) # site gets occupied
+        t2 = timer
+
+        if t0 < t1 and t0 < t2: # AP occurrs
+            b = binomial(n, pr)
+            n-=b
+            v+=c*b
+            tmin = t0
+            timer-=tmin
+            prelist.append(tcurr+tmin)
+
+        elif t1<t0 and t1<t2: # add a docked vesicle
+            n+=1
+            tmin = t1
+            timer-=tmin
+
+        else:
+            tmin=t2
+            timer = delta_t
+            if tcurr >= ratio*tmax:
+                nlist.append(n)
+                vlist.append(v)
+                vthlist.append(vth)
+                tlist.append(tcurr)
+
+        tplot.append(tcurr)
+        vplot.append(v)
+        nplot.append(n)
+        vthplot.append(vth)
+
+        tcurr += tmin
+        if v>=vth:
+            postlist.append(tcurr)
+            postvth.append(vth)
+            vth=get_vth(vth, v, cvth, alpha, cv)
+            v=0
+
+        # Update the continuous dynamics
+        v=v*exp(-tmin/tauv)
+        vth=vthb+(vth-vthb)*np.exp(-tmin/tauvth)
+
+    Tlist = np.diff(postlist)
+    Tmean = np.mean(Tlist)
+    CVT2=np.var(Tlist)/Tmean**2
+    FFn=np.var(nlist)/np.mean(nlist)
+    FFv=np.var(vlist)/np.mean(vlist)
+
+    return tlist, nlist, vlist, vthlist, prelist, postlist, Tmean, CVT2, FFn, FFv,\
+        tplot, vplot, nplot, vthplot, postvth
+
+def get_vth(vth, v, cvth, alpha, cv):
+    return vth+cvth*(v/cv)**alpha
+
+def getta(cvth, alpha, navgs, xlist):
+    Ta=[]
+    Ca=[]
+    for j in range(navgs):
+        Taj=[]
+        Caj=[]  
+        for i, x in enumerate(xlist):
+            print(j, navgs, i, len(xlist))
+            f=x
+            res=simulate(n, v, f, pr, M, k, c, vth, tauv, tauvth, vthb,
+                         cvth, cv, alpha, tmax, delta_t)
+            Taj.append(res[6])
+            Caj.append(res[7])
+        Ta.append(Taj)
+        Ca.append(Caj)
+
+    return np.mean(np.array(Ta), 0)
+
+def gettaca(cvth, alpha, navgs, xlist):
+    Ta=[]
+    Ca=[]
+    for j in range(navgs):
+        Taj=[]
+        Caj=[]  
+        for i, x in enumerate(xlist):
+            print(j, navgs, i, len(xlist))
+            f=x
+            res=simulate(n, v, f, pr, M, k, c, vth, tauv, tauvth, vthb,
+                         cvth, cv, alpha, tmax, delta_t)
+            Taj.append(res[6])
+            Caj.append(res[7])
+        Ta.append(Taj)
+        Ca.append(Caj)
+
+    return np.mean(np.array(Ta), 0), np.mean(np.array(Ca), 0)
+
+def tmean(kx, taux, Xb, k, f, pr, c, M):
+    numerator1 = kx * taux
+    denominator1 = Xb
+    
+    numerator2 = (k + f * pr) * Xb
+    denominator2 = c * f * k * M * pr
+    
+    result = (numerator1 / denominator1) + (numerator2 / denominator2)
+    return result
+
+def cvt2(c,f,k,M,pr,tauv, tauvth, vthb, kx):
+    E=np.exp(1)
+    return (-((c*f*k*M*pr*tauv - (c*f*k*M*pr*tauv)/E**(((kx*tauvth)/vthb + ((k + f*pr)*vthb)/(c*f*k*M*pr))/tauv))**2/(k + f*pr)**2) + \
+    (c**2*f*k*M*pr*tauv*(-((-1 + E**((2*((kx*tauvth)/vthb + ((k + f*pr)*vthb)/(c*f*k*M*pr)))/tauv))*f**2*(-2 + pr)*pr**2*(-1 + f**2*pr**2*tauv**2)) + \
+    2*(-1 + E**(((kx*tauvth)/vthb + ((k + f*pr)*vthb)/(c*f*k*M*pr))/tauv))*k**4*tauv**2*\
+    (1 + pr*(-1 + M - 2*f*M*tauv) + E**(((kx*tauvth)/vthb + ((k + f*pr)*vthb)/(c*f*k*M*pr))/tauv)*(1 + pr*(-1 + M + 2*f*M*tauv))) + \
+    f*k*pr*(4 - 4*E**((-k - f*pr + 1/tauv)*((kx*tauvth)/vthb + ((k + f*pr)*vthb)/(c*f*k*M*pr)))*f*pr*(2 + (-2 + M)*pr)*tauv +\
+    4*E**(((kx*tauvth)/vthb + ((k + f*pr)*vthb)/(c*f*k*M*pr))/tauv)*f*M*(-2 + pr)*pr*tauv*(-1 + f**2*pr**2*tauv**2) +\
+    pr*(-3 + 2*M + 4*f*(-1 + M)*(-1 + pr)*tauv + f**2*(-4 + pr)*pr*tauv**2 - 2*f**3*M*(-2 + pr)*pr**2*tauv**3) -\
+    E**((2*((kx*tauvth)/vthb + ((k + f*pr)*vthb)/(c*f*k*M*pr)))/tauv)*\
+    (4 + pr*(-3 + 2*M - 4*f*(-1 + M)*(-1 + pr)*tauv + f**2*(-4 + pr)*pr*tauv**2 + 2*f**3*M*(-2 + pr)*pr**2*tauv**3))) - \
+    (-1 + E**(((kx*tauvth)/vthb + ((k + f*pr)*vthb)/(c*f*k*M*pr))/tauv))*f*k**3*pr*tauv**2*\
+    (-4 + pr*(3 - 2*M*(1 + f*(-6 + pr)*tauv)) + E**(((kx*tauvth)/vthb + ((k + f*pr)*vthb)/(c*f*k*M*pr))/tauv)*(-4 + pr*(3 + 2*M*(-1 + f*(-6 + pr)*tauv)))) + \
+    k**2*(2 - 8*E**((-k - f*pr + 1/tauv)*((kx*tauvth)/vthb + ((k + f*pr)*vthb)/(c*f*k*M*pr)))*f*pr*(1 + (-1 + M)*pr)*tauv + \
+    8*E**(((kx*tauvth)/vthb + ((k + f*pr)*vthb)/(c*f*k*M*pr))/tauv)*f*M*pr*tauv*(1 + f**2*(-3 + pr)*pr**2*tauv**2) + \
+    pr*(2*(-1 + M) + 4*f*(-1 + M)*(-1 + pr)*tauv + f**2*(-4 + pr)*pr*tauv**2 - 4*f**3*M*(-3 + pr)*pr**2*tauv**3) - \
+    E**((2*((kx*tauvth)/vthb + ((k + f*pr)*vthb)/(c*f*k*M*pr)))/tauv)*\
+    (2 + pr*(-2 + f*tauv*(-4 + pr*(4 + f*(-4 + pr)*tauv)) + 2*M*(1 + 2*f*tauv*(1 + pr*(-1 + f**2*(-3 + pr)*pr*tauv**2))))))))/\
+    (2.*E**((2*((kx*tauvth)/vthb + ((k + f*pr)*vthb)/(c*f*k*M*pr)))/tauv)*(k + f*pr)**2*(2*k - f*(-2 + pr)*pr)*(-1 + k*tauv + f*pr*tauv)*(1 + k*tauv + f*pr*tauv)))/\
+    (((kx*tauvth)/vthb + ((k + f*pr)*vthb)/(c*f*k*M*pr))**2*((c*f*k*M*pr)/(E**(((kx*tauvth)/vthb + ((k + f*pr)*vthb)/(c*f*k*M*pr))/tauv)*(k + f*pr)) - \
+    (c*f*k*kx*M*pr*(kx*tauvth + ((k + f*pr)*vthb**2)/(c*f*k*M*pr)))/\
+    (E**(((kx*tauvth)/vthb + ((k + f*pr)*vthb)/(c*f*k*M*pr))/tauvth)*(k + f*pr)*tauvth*vthb*\
+    (vthb - vthb/(1 - (kx*tauvth + ((k + f*pr)*vthb**2)/(c*f*k*M*pr))/(tauv*vthb))**(tauv/tauvth))))**2)
+
+###############################################################################
+#
+#                               Main code
+#
+###############################################################################
+
+f=100
+pr=0.1
+M=100
+k=100
+c=0.005
+tauv=1
+tauvth=0.1
+
+n=0 # occupied states
+v=0
+
+vthb=0.2
+vth=vthb
+
+# alpha = 0  constant jumps
+# cvth = 0  fixed threshold
+
+cvth=0.1
+alpha=1
+cv=vthb #0.1
+
+delta_t = 0.001
+tmax = 20 # <-------------- TMAX
+
+xlist=np.linspace(0.01, 100, 100)
+navgs=1
+Tsim, Csim =gettaca(cvth, alpha, navgs, xlist)
+Teq=tmean(cvth, tauvth, vthb, k, xlist, pr, c, M)
+Ceq=cvt2(c, xlist, k, M, pr, tauv, tauvth, vthb, cvth)
+
+
+import matplotlib.pyplot as plt
+import matplotlib as mpl
+
+# Set the font to Bookman Oldstyle
+mpl.rcParams['font.family'] = 'Bookman Old Style'
+
+fig, ax = plt.subplots(2,1, figsize=(4,3.5))
+ax[0].set_ylabel('Output\nfrequency (Hz)')
+ax[0].plot(xlist, 1/Tsim, label='simulations')
+ax[0].plot(xlist, 1/Teq, label='theoretical')
+ax[0].set_xticks([])
+# =============================================================================
+# ax[0].set_ylim([0, 1])
+# =============================================================================
+ax[0].legend()
+ax[1].plot(xlist, Csim)
+ax[1].plot(xlist, Ceq)
+ax[1].set_ylim([0,1])
+ax[1].set_xlabel('Input Frequency (Hz)')
+ax[1].set_ylabel('Coefficient of\nvariation squared')
+plt.show()
+#%% Test 2:  Plot for noise and mean for tau = 0 and infinity.
+
+f=100
+pr=0.1
+M=100
+k=100
+c=0.005
+tauv=1
+tauvth=1
+
+n=0 # occupied states
+v=0
+
+vthb=0.2
+vth=vthb
+
+# alpha = 0  constant jumps
+# cvth = 0  fixed threshold
+
+cvth=0
+alpha=1
+cv=vthb #0.1
+
+delta_t = 0.001
+tmax = 20 # <-------------- TMAX
+
+xlist=np.linspace(0.01, 100, 100)
+navgs=1
+Tsim, Csim =gettaca(cvth, alpha, navgs, xlist)
+Teq=tmean(cvth, tauvth, vthb, k, xlist, pr, c, M)
+Ceq=cvt2(c, xlist, k, M, pr, tauv, tauvth, vthb, cvth)
+
+
+import matplotlib.pyplot as plt
+import matplotlib as mpl
+
+# Set the font to Bookman Oldstyle
+mpl.rcParams['font.family'] = 'Bookman Old Style'
+
+fig, ax = plt.subplots(2,1, figsize=(4,3.5))
+ax[0].set_ylabel('Output\nfrequency (Hz)')
+ax[0].plot(xlist, 1/Tsim, label='simulations')
+ax[0].plot(xlist, 1/Teq, label='theoretical')
+ax[0].set_xticks([])
+# =============================================================================
+# ax[0].set_ylim([0, 1])
+# =============================================================================
+ax[0].legend()
+ax[1].plot(xlist, Csim)
+ax[1].plot(xlist, Ceq)
+ax[1].set_ylim([0,1])
+ax[1].set_xlabel('Input Frequency (Hz)')
+ax[1].set_ylabel('Coefficient of\nvariation squared')
+plt.show()
+
+#%%
+# Figure plot simulations, three alphas
+f=100
+pr=0.3
+M=100
+k=10
+c=0.008
+tauv=0.05
+tauvth=0.1
+
+n=0 # occupied states
+v=0
+
+vthb=0.15
+vth=0.15
+
+# alpha = 0  constant jumps
+# cvth = 0  fixed threshold
+
+cvth=0.1
+alpha=0
+cv=vthb #0.1
+
+delta_t = 0.001
+tmax = 0.5 # <-------------- TMAX
+
+
+
+res=simulate(n, v, f, pr, M, k, c, vth, tauv, tauvth, vthb, 0, cv, alpha, tmax, delta_t)
+res0=simulate(n, v, f, pr, M, k, c, vth, tauv, tauvth, vthb, cvth, cv, 0, tmax, delta_t)
+res1=simulate(n, v, f, pr, M, k, c, vth, tauv, tauvth, vthb, 0.1, cv, 1.5, tmax, delta_t)
+
+fig, ax = plt.subplots(4,1, figsize=(5,3))
+ax[0].plot(res[10],res[11], color='#1f77b4', label='membrane potential')
+ax[0].plot(res[10],res[13], color='k', label='AP-firing threshold')
+
+ax[1].plot(res0[10],res0[11], color='#1f77b4', label='membrane potential')
+ax[1].plot(res0[10],res0[13], color='k', label='AP-firing threshold')
+
+ax[2].plot(res1[10],res1[11], color='#1f77b4', label='membrane potential')
+ax[2].plot(res1[10],res1[13], color='k', label='AP-firing threshold')
+
+ax[0].set_xticks([])
+ax[1].set_xticks([])
+ax[2].set_xticks([])
+
+ax[0].set_xticks([])
+ax[0].set_ylabel('')
+
+ax[3].plot(res[10],res[12], color='#ff7f0e', label='# of occupied vesicles')
+ax[3].set_xlabel('Time (sec)')
+#%%
+
+# Figure for plot simulations
+xlist=np.linspace(0.01, 100, 20)
+navgs=10
+Ta=getta(cvth, alpha, navgs, xlist)
+
+alphas = [0,1,2]
+talist=[]
+for a in alphas:
+    Ta=getta(cvth, a, navgs, xlist)
+    talist.append(Ta)
+
+linestyles=['-', '--', '-.']
+lw=3
+plt.figure(figsize=(4,3.5))
+for i in range(len(alphas)):
+    plt.plot(xlist, 1/talist[i], label=r'$\alpha$={}'.format(alphas[i]),
+             linestyle=linestyles[i], linewidth=lw)
+plt.ylabel('Output frequency (Hz)')
+plt.xlabel('Input frequency (Hz)')
+plt.legend(loc='upper left')
+plt.show()
+#%%
+
+# =============================================================================
+# plt.figure(figsize=(4,3.5))
+# plt.title(r'Adaptive threshold: $\alpha$={}, $c_x$={}'.format(alpha, cvth))
+# plt.plot(xlist, 1/Ta)
+# plt.ylabel('Output frequency')
+# plt.xlabel('Input frequency (Hz)')
+# plt.show()
+# =============================================================================
+
+f=100
+pr=0.2
+M=100
+k=10
+c=0.01
+tauv=1
+tauvth=1
+
+n=0 # occupied states
+v=0
+
+vthb=0.2
+vth=vthb
+
+# alpha = 0  constant jumps
+# cvth = 0  fixed threshold
+
+cvth=0.1
+alpha=2
+cv=vthb #0.1
+
+delta_t = 0.001
+tmax = 30 # <-------------- TMAX
+
+navgs=100
+Ta=[]
+T0=[]
+Ca=[]
+C0=[]
+for j in range(navgs):
+    Taj=[]
+    Caj=[]
+    T0j=[]
+    C0j=[]
+    xname='f'
+    xlist=np.linspace(0.01, 100, 100)
+    for i, x in enumerate(xlist):
+        print(j, navgs, i, len(xlist))
+        f=x
+        res0=simulate(n, v, f, pr, M, k, c, vth, tauv, tauvth, vthb,
+                      0, cv, alpha, tmax, delta_t)
+        res=simulate(n, v, f, pr, M, k, c, vth, tauv, 0.05, vthb,
+                     cvth, cv, alpha, tmax, delta_t)
+
+    # =============================================================================
+    ##               (n, v, f, pr, M, k, c, vth, tauv, tauvth, vth0, vthb, tmax, delta_t, None)
+    # =============================================================================
+        Taj.append(res[6])
+        Caj.append(res[7])
+        T0j.append(res0[6])
+        C0j.append(res0[7])
+    Ta.append(Taj)
+    T0.append(T0j)
+    Ca.append(Caj)
+    C0.append(C0j)
+
+Ta = np.mean(np.array(Ta), 0)
+Ca = np.mean(np.array(Ca), 0)
+T0 = np.mean(np.array(T0), 0)
+C0 = np.mean(np.array(C0), 0)
+
+plt.figure(figsize=(4,3.5))
+lw=5
+plt.plot(xlist, C0, color='k', linewidth=lw, label='fixed threshold')
+plt.plot(xlist, Ca, color='b',linewidth=lw, label='adaptive threshold')
+plt.ylabel('Coefficient of\nvariation squared')
+plt.xlabel('Input frequency (Hz)')
+plt.legend()
+plt.show()
+
+# =============================================================================
+# fig, ax = plt.subplots(2,1, figsize=(4,3.5))
+# ax[0].set_title('Constant threshold jumps')
+# ax[0].plot(xlist, Ta, color='blue', label='adaptive threshold')
+# ax[0].plot(xlist, T0, color='k', label='fixed threshold')
+# ax[0].set_xticks([])
+# ax[0].set_ylabel('Output frequency')
+# ax[0].legend()
+# 
+# ax[1].plot(xlist, C0, color='k')
+# ax[1].plot(xlist, Ca, color='b')
+# ax[1].set_ylabel('Coefficient of\nvariation squared')
+# ax[1].set_xlabel('Input frequency (Hz)')
+# plt.show()
+# =============================================================================
+#%%
+# Find a situation where Topen = Tnew
+f=100
+pr=0.2
+M=100
+k=10
+c=0.01
+tauv=10
+tauvth=10
+
+n=0 # occupied states
+v=0
+
+vthb=0.2
+vth=vthb
+
+# alpha = 0  constant jumps
+# cvth = 0  fixed threshold
+
+cvth=0.1
+alpha=1
+cv=vthb #0.1
+
+delta_t = 0.001
+tmax = 10 # <-------------- TMAX
+
+# find a parameter to change that makes Topen=Tnew
+
+def getx(f):
+    topen=tauv*np.log(1/(1 - ((k + f*pr) *vth)/(c* f *k* M *pr* tauv)))
+    tnew=(cvth *tauvth)/vthb + ((k + f* pr) *vthb)/(c* f* k* M *pr)
+    tol=0.1
+
+    tvhrange=np.flip(np.linspace(0.01, 1, 100))
+    for tvh in tvhrange:
+        tnew=(cvth *tvh)/vthb + ((k + f* pr) *vthb)/(c* f* k* M *pr)
+        err=abs(topen-tnew)
+        if err<tol:
+            return tvh
+    raise Exception('no tv', f)
+    
+# -----------------------------------------------------------------------------
+navgs=100
+Ta=[]
+T0=[]
+Ca=[]
+C0=[]
+for j in range(navgs):
+    Taj=[]
+    Caj=[]
+    T0j=[]
+    C0j=[]
+    xname='f'
+    xlist=np.linspace(1, 100, 100)
+    for i, x in enumerate(xlist):
+        print(j, navgs, i, len(xlist))
+        f=x
+        res0=simulate(n, v, f, pr, M, k, c, vth, tauv, tauvth, vthb,
+                      0, cv, alpha, tmax, delta_t)
+        tauvth=getx(f)
+        res=simulate(n, v, f, pr, M, k, c, vth, tauv, tauvth, vthb,
+                     cvth, cv, alpha, tmax, delta_t)
+
+    # =============================================================================
+    ##               (n, v, f, pr, M, k, c, vth, tauv, tauvth, vth0, vthb, tmax, delta_t, None)
+    # =============================================================================
+        Taj.append(res[6])
+        Caj.append(res[7])
+        T0j.append(res0[6])
+        C0j.append(res0[7])
+    Ta.append(Taj)
+    T0.append(T0j)
+    Ca.append(Caj)
+    C0.append(C0j)
+
+Ta = np.mean(np.array(Ta), 0)
+Ca = np.mean(np.array(Ca), 0)
+T0 = np.mean(np.array(T0), 0)
+C0 = np.mean(np.array(C0), 0)
+
+fig, ax = plt.subplots(2,1, figsize=(4,3.5))
+ax[0].set_title('Constant threshold jumps')
+ax[0].plot(xlist, Ta, color='blue',linestyle='--', label='adaptive threshold')
+ax[0].plot(xlist, T0, color='k', label='fixed threshold')
+ax[0].set_xticks([])
+ax[0].set_ylabel('Output frequency')
+ax[0].legend()
+
+ax[1].plot(xlist, C0, color='k')
+ax[1].plot(xlist, Ca, color='b',linestyle='--')
+ax[1].set_ylabel('Coefficient of\nvariation squared')
+ax[1].set_xlabel('Input frequency (Hz)')
+plt.show()
+
+#%%
+plt.figure(figsize=(4,3.5))
+lw=5
+plt.plot(xlist, C0, color='k', linewidth=lw, label='fixed threshold')
+plt.plot(xlist, Ca, color='b',linewidth=lw, label='adaptive threshold')
+cveq=cvt2(c, xlist, k, M, pr, tauv, tauvth, vthb, cvth)
+plt.plot(xlist,cveq, label='noise theory')
+plt.ylabel('Coefficient of\nvariation squared')
+plt.xlabel('Input frequency (Hz)')
+plt.legend()
+plt.show()
+#%%
+# =============================================================================
+# tvals=[]
+# FFvs=[]
+# FFns=[]
+# nfs=10
+# fslist=np.linspace(1,100,nfs)
+# for j, f in enumerate(fslist):
+#     # Calculate test
+#     Tsim=[]
+#     FFnsim=[]
+#     FFvsim=[]
+#     nsim=10
+#     for i in range(nsim):
+#         print(j, nfs, i, nsim)
+#         res=simulate(n, v, f, pr, M, k, c, 
+#                     vth, tauv, tauvth, vth0, vthb, tmax, delta_t)
+#         Tsim.append(res[6])
+#         FFnsim.append(res[7])
+#         FFvsim.append(res[8])
+#     Tsim=np.mean(Tsim)
+#     FFnsim=np.mean(FFnsim)
+#     FFvsim=np.mean(FFvsim)
+#     tvals.append(Tsim)
+#     FFvs.append(FFvsim)
+#     FFns.append(FFnsim)
+#     
+# plt.subplot(3,1,1)
+# plt.plot(fslist, tmeanadapt(fslist, c, pr, k, M, tauv, vth), label='Teq')
+# plt.plot(fslist, tvals, label='Tsim')
+# plt.legend()
+# plt.subplot(3,1,2)
+# plt.plot(fslist, FFvadapt(fslist, c, pr, k, M, tauv, vth), label='FFveq')
+# plt.plot(fslist, FFvs, label='FFvsim')
+# plt.xlabel('input frequency')
+# plt.legend()
+# plt.subplot(3,1,3)
+# plt.plot(fslist, FFnadapt(fslist, c, pr, k, M, tauv, vth), label='FFneq')
+# plt.plot(fslist, FFns, label='FFnsim')
+# plt.xlabel('input frequency')
+# plt.legend()
+# plt.show()
+# 
+# =============================================================================
+# =============================================================================
+# # Calculate test
+# Tsim=[]
+# FFnsim=[]
+# FFvsim=[]
+# nsim=100
+# for i in range(nsim):
+#     print(i, nsim)
+#     _, _, _, _, _, _, T, FFn, FFv =simulate(n, v, f, pr, M, k, c, 
+#                         vth, tauv, tauvth, vthb, tmax, delta_t)
+#     Tsim.append(T)
+#     FFnsim.append(FFn)
+#     FFvsim.append(FFv)
+# Tsim=np.mean(Tsim)
+# FFnsim=np.mean(FFnsim)
+# FFvsim=np.mean(FFvsim)
+# =============================================================================
+
+# =============================================================================
+# res = simulate(n, v, f, pr, M, k, c, vth, tauv, tauvth, vth0, vthb, tmax, delta_t)
+# Tsim=res[6]
+# FFnsim=res[7]
+# FFvsim=res[8]
+# fig, ax = plt.subplots(2,1)
+# ax[0].plot(res[9], res[10], label='v')
+# ax[0].plot(res[9], res[12], label='vth')
+# ax[0].plot(res[5], res[13], 'ro')
+# ax[1].plot(res[9], res[11])
+# ax[0].plot([],[],' ', label='Tmean={}'.format(np.around(Tsim, 3)))
+# ax[0].set_xticks([])
+# ax[0].set_ylabel('membrane potential')
+# ax[1].set_ylabel('vesicles')
+# ax[0].legend()
+# plt.show()
+# =============================================================================
+
+
+# =============================================================================
+# Teq = tauv*np.log(1 + ((k + f*pr)*vth0)/(c*f*k*M*pr*tauv - (k + f*pr)*vthb))
+# FFneq=((k + f*pr)*(-((k**2*M**2)/(k + f*pr)**2) + (k*M*(2*k*M - f*(-2 + pr)*pr))/((k + f*pr)*(2*k - f*(-2 + pr)*pr))))/(k*M)
+# FFveq=(c*(2*k**3*(1 + (-1 + M)*pr)*tauv - f**2*(-2 + pr)*pr**2*(1 \
+#       + f*pr*tauv) + k**2*(2 + 2*(-1 + M)*pr - f*(-2 + pr)*pr*tauv) + \
+#       f*k*pr*(4 + pr*(-3 + 2*M + 2*f*tauv))))/(2.*(k + \
+#       f*pr)*(2*k - f*(-2 + pr)*pr)*(1 + k*tauv + f*pr*tauv))
+# check=(c *f *k *M *pr* tauv)/(k + f *pr) - vthb/vth0>0
+# print('check', check)
+# print('T eq sim')
+# print(Teq, Tsim)
+# print('FFn eq sim')
+# print(FFneq, FFnsim)
+# print('FFv eq sim')
+# print(FFveq, FFvsim)
+# =============================================================================
