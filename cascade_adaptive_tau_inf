@@ -1,0 +1,200 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import scipy.stats as ss
+
+def run_test(f, k, M, pr, c, vth, tauv, tauvth, vthb, cvth, alpha, cv,
+             nnum, delta_t, tmax, ttype=None):
+    AP_times = [[] for i in range(nnum)]
+    vhists=[[] for i in range(nnum)]
+    vthhists=[[] for i in range(nnum)]
+    nhists=[[] for i in range(nnum)]
+    thists = [[] for i in range(nnum)]
+    ratio = 0
+    tcurr = 0
+    vs = np.zeros(nnum)
+    timer = delta_t
+    while tcurr < tmax:
+        t0=np.random.exponential(1/f)
+        t2=timer
+        if t0<t2: 
+            b=np.random.binomial(M, pr)
+            vs[0]=b
+            tmin=t0
+            timer -= tmin
+        else:
+            tmin=t2
+            if tcurr>ratio*tmax:
+                for i in range(nnum):
+                    vhists[i].append(vs[i])
+                    thists[i].append(tcurr)
+            timer = delta_t
+        tcurr += tmin
+        for i in range(len(vs)):
+            if vs[i] >= vth:
+                vs[i] = 0
+                AP_times[i].append(tcurr)
+                if i != nnum-1:
+                    b=np.random.binomial(M, pr) # Number released
+                    vs[i+1]=b
+    Tmeans=[np.mean(np.diff(AP_times[i])) for i in range(nnum)]
+    CVT2s=[np.var(np.diff(AP_times[i]))/np.mean(np.diff(AP_times[i]))**2 for i in range(nnum)]
+    return thists, nhists, vhists, AP_times, Tmeans, CVT2s, vthhists
+
+def getstats(navgs, x):
+    pr = x
+    Tavg=[]
+    CVT2avg=[]
+    Tavg0=[]
+    CVT2avg0=[]
+    Tavg1=[]
+    CVT2avg1=[]
+    Tavg2=[]
+    CVT2avg2=[]
+    
+    for i in range(navgs):
+        print(i, navgs)
+        res = run_test(f, k, M, pr, c, vth, tauv, tauvth, vthb, 0, alpha, cv, nnum, delta_t, tmax)
+        res0 = run_test(f, k, M, pr, c, vth, tauv, tauvth, vthb, cvth, 0, cv, nnum, delta_t, tmax)
+        res1 = run_test(f, k, M, pr, c, vth, tauv, tauvth, vthb, cvth, 1, cv, nnum, delta_t, tmax)
+        res2 = run_test(f, k, M, pr, c, vth, tauv, tauvth, vthb, cvth, 2, cv, nnum, delta_t, tmax)
+        
+# =============================================================================
+#         res = run_test(f, k, M, pr, c, vth, tauv, tauvth, vthb, 0, alpha, cv, nnum, delta_t, tmax)
+#         res0 = run_test(f, k, M, pr, c, vth, tauv, tauvth, vthb, 0.1, 0, cv, nnum, delta_t, tmax)
+#         res1 = run_test(f, k, M, pr, c, vth, tauv, tauvth, vthb, 0.5, 0, cv, nnum, delta_t, tmax)
+#         res2 = run_test(f, k, M, pr, c, vth, tauv, tauvth, vthb, 1, 0, cv, nnum, delta_t, tmax)
+#         
+# =============================================================================
+        T = res[4]
+        CVT2=res[5]
+        Tavg.append(T)
+        CVT2avg.append(CVT2)
+        
+        T0 = res0[4]
+        CVT20=res0[5]
+        Tavg0.append(T0)
+        CVT2avg0.append(CVT20)
+        
+        T1 = res1[4]
+        CVT21=res1[5]
+        Tavg1.append(T1)
+        CVT2avg1.append(CVT21)
+        
+        T2 = res2[4]
+        CVT22=res2[5]
+        Tavg2.append(T2)
+        CVT2avg2.append(CVT22)
+        
+    Tavg=np.array(Tavg)
+    CVT2avg=np.array(CVT2avg)
+    Tavg=np.mean(Tavg, 0)
+    CVT2avg=np.mean(CVT2avg, 0)
+    
+    Tavg0=np.array(Tavg0)
+    CVT2avg0=np.array(CVT2avg0)
+    Tavg0=np.mean(Tavg0, 0)
+    CVT2avg0=np.mean(CVT2avg0, 0)
+    
+    Tavg1=np.array(Tavg1)
+    CVT2avg1=np.array(CVT2avg1)
+    Tavg1=np.mean(Tavg1, 0)
+    CVT2avg1=np.mean(CVT2avg1, 0)
+    
+    Tavg2=np.array(Tavg2)
+    CVT2avg2=np.array(CVT2avg2)
+    Tavg2=np.mean(Tavg2, 0)
+    CVT2avg2=np.mean(CVT2avg2, 0)
+
+    return Tavg, CVT2avg, Tavg0, CVT2avg0, Tavg1, CVT2avg1, Tavg2, CVT2avg2
+
+def get_vth(v, cvth, alpha, cv):
+    return cvth*(v/cv)**alpha
+# =============================================================================
+#     return vth0
+# =============================================================================
+                
+###############################################################################
+#
+#                               Main Code
+#
+###############################################################################
+
+f = 100
+M = 200
+pr = 0.5
+c = 1
+k = 0
+tauv=np.inf # 1
+tauvth=1
+vth = 100
+vthb = 100
+
+cvth=0
+alpha=0
+cv=0.1
+
+nnum = 11 # num neurons in sequence
+tmax = 100 # 30
+
+delta_t = 0.001
+# =============================================================================
+# resa = run_test(f, k, M, pr, c, vth, tauv, tauvth, vthb, cvth, alpha, cv, nnum, delta_t, tmax)
+# 
+# pnum=4
+# plt.plot(resa[0][pnum], resa[2][pnum], label='v')
+# plt.plot(resa[0][pnum], resa[6][pnum], label='vth')
+# for x in resa[3][pnum]:
+#     plt.axvline(x=x, color='r', alpha=0.1)
+# plt.legend()
+# #%%
+# =============================================================================
+navgs=1
+T=[]
+CVT2=[]
+
+for i in range(navgs):
+    print(i, navgs)
+    res = run_test(f, k, M, pr, c, vth, tauv, tauvth, vthb, cvth, alpha, cv, nnum, delta_t, tmax)
+    Tx = res[4]
+    Cx=res[5]
+    T.append(Tx)
+    CVT2.append(Cx)
+T = np.array(T)
+CVT2=np.array(CVT2)
+T=np.mean(T, 0)
+CVT2=np.mean(CVT2,0)
+
+fbx=ss.binom.cdf(vth, M, pr)
+cv0=1
+tm0=1/f
+# =============================================================================
+# cv0=1/2
+# tm0=2/f
+# =============================================================================
+# =============================================================================
+# fbx=ss.geom.cdf(vth, pg)
+# cv0=1
+# tm0=1/f
+# =============================================================================
+
+def getceq(n, fbx, cv0):
+    return 1+(1-fbx)**n*(cv0-1)
+def gettn(n, fbx, tm0):
+    return (1/(1-fbx))**n*tm0
+
+prange=np.arange(1, nnum+1)
+teq=gettn(prange, fbx, tm0)
+ceq=getceq(prange, fbx, cv0)
+
+fig, ax = plt.subplots(2,1, figsize=(4,3.5))
+ax[0].plot(range(1,nnum+1), T, marker='o', color='b')
+ax[0].plot(range(1,nnum+1), teq, color='k')
+ax[1].plot(range(1, nnum+1), CVT2, marker='o', color='orange')
+ax[1].plot(range(1, nnum+1), ceq,color='k')
+ax[1].set_xlabel('Neuron number in sequence')
+ax[0].set_ylabel('Output frequency')
+ax[1].set_ylabel('Coefficient of\nvariation squared')
+# =============================================================================
+# ax[1].plot(range(1, nnum+1), (M*pr+1)/(M*pr+vth)*np.ones(nnum))
+# =============================================================================
+plt.show()
