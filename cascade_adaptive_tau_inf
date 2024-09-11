@@ -15,7 +15,7 @@ def run_test(f, k, M, pr, c, vth, tauv, tauvth, vthb, cvth, alpha, cv,
         t0=np.random.exponential(1/f)
         t1=timer
         if t0<t1:
-            b=np.random.binomial(M, pr)#np.random.choice([120,50])
+            b=np.random.binomial(M, pr)
             vs[0]=b
             tmin=t0
             timer -= tmin
@@ -61,7 +61,7 @@ alpha=0
 cv=0.1
 
 nnum = 11 # num neurons in sequence
-tmax = 300 # 30
+tmax = 1000 # 30
 
 delta_t = 0.001
 
@@ -91,6 +91,7 @@ for i in range(navgs):
     
 T = np.array(T)
 CVT2=np.array(CVT2)
+cvs=CVT2
 T=np.mean(T, 0)
 CVT2=np.mean(CVT2,0)
 
@@ -103,18 +104,49 @@ def getceq(n, fbx, cv0):
 def gettn(n, fbx, tm0):
     return (1/(1-fbx))**n*tm0
 
+def bootstrap(data, n_bootstraps, percentiles=(2.5, 97.5)):
+#tab1
+    n_samples = len(data)
+    means = []
+    cvs_squared = []
+    for _ in range(n_bootstraps):
+        #tab2
+        bootstrap_sample = np.random.choice(data, size=n_samples, replace=True)
+        mean = np.mean(bootstrap_sample)
+        variance = np.var(bootstrap_sample, ddof=1)  # Sample variance
+        squared_cv = variance / (mean ** 2) if mean != 0 else np.nan
+        means.append(mean)
+        cvs_squared.append(squared_cv)
+    #tab1
+    mean_ci = np.percentile(means, percentiles)
+    cv_squared_ci = np.percentile(cvs_squared, percentiles)
+    return mean_ci, cv_squared_ci
+
+bounds=[]
+for i in range(cvs.shape[1]):
+    bounds.append(bootstrap(cvs[:, i], 100)[0])
+bounds=np.array(bounds)
+
+data=np.random.randint(16, size=10)
+nb=1000
+res = bootstrap(data,nb)
+print(res[0])
+print(res[1])
+
 prange=np.arange(1, nnum+1)
 teq=gettn(prange, fbx, tm0)
 ceq=getceq(prange, fbx, cv0)
 
 fig, ax = plt.subplots(2,1, figsize=(4,3.5))
-ax[0].plot(range(1, nnum+1), T, marker='o', color='b')
-ax[0].plot(range(1, nnum+1), teq, color='k')
+ax[0].plot(range(1, nnum+1), 1/T, marker='o', color='b', label='simulations')
+ax[0].plot(range(1, nnum+1), 1/teq, color='k', label='theoretical')
 ax[1].plot(range(1, nnum+1), CVT2, marker='o', color='orange')
 ax[1].plot(range(1, nnum+1), ceq, color='k')
 ax[1].set_xlabel('Neuron number in sequence')
-ax[0].set_ylabel('FPT')
+ax[0].set_ylabel('Output\nfrequency (Hz)')
 ax[1].set_ylabel('Coefficient of\nvariation squared')
+ax[1].errorbar(prange, CVT2, yerr=[CVT2 - bounds[:, 0], bounds[:, 1] - CVT2], fmt='o', color='orange')
+ax[0].legend(loc='upper right')
 # =============================================================================
 # ax[0].set_yscale('log')
 # =============================================================================
