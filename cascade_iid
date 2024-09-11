@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import scipy.stats as ss
 
 def run_test(f, k, M, pr, c, vth, tauv, tauvth, vthb, cvth, alpha, cv,
              nnum, delta_t, tmax, ttype=None):
@@ -61,8 +62,6 @@ def run_test(f, k, M, pr, c, vth, tauv, tauvth, vthb, cvth, alpha, cv,
             vs[i] = vs[i]*np.exp(-tmin*tauv)
             vths[i] = vthb+(vths[i]-vthb)*np.exp(-tmin*tauvth)
 
-
-                    
     Tmeans=[np.mean(np.diff(AP_times[i])) for i in range(nnum)]
     CVT2s=[np.var(np.diff(AP_times[i]))/np.mean(np.diff(AP_times[i]))**2 for i in range(nnum)]
         
@@ -177,6 +176,7 @@ delta_t = 0.001
 # plt.legend()
 # #%%
 # =============================================================================
+
 navgs=50
 T=[]
 CVT2=[]
@@ -194,11 +194,27 @@ T=np.mean(T, 0)
 CVT2=np.mean(CVT2,0)
 #%%
 fig, ax = plt.subplots(2,1, figsize=(4,3.5))
-ax[0].plot(range(1,nnum+1), 1/T, marker='o', color='b')
-ax[1].plot(range(1, nnum+1), CVT2, marker='o', color='orange')
+
+def getceq(n, fbx, cv0):
+    return 1+(1-fbx)**n*(cv0-1)
+def gettn(n, fbx, tm0):
+    return (1/(1-fbx))**n*tm0
+
+fbx=ss.binom.cdf(vth, M, pr)
+cv0=1/2
+tm0=1/f
+
+prange=np.arange(1, nnum+1)
+teq=gettn(prange, fbx, tm0)
+ceq=getceq(prange, fbx, cv0)
+
+ax[0].plot(prange, T, marker='o', color='b')
+ax[1].plot(prange, CVT2, marker='o', color='orange')
+ax[0].plot(prange, teq)
+ax[1].plot(prange, ceq)
 ax[1].plot(np.linspace(0,nnum, 100), np.ones(100), color='k')
 ax[1].set_xlabel('Neuron number in sequence')
-ax[0].set_ylabel('Output frequency')
+ax[0].set_ylabel('First passage time')
 ax[1].set_ylabel('Coefficient of\nvariation squared')
 # =============================================================================
 # ax[1].plot(range(1, nnum+1), (M*pr+1)/(M*pr+vth)*np.ones(nnum))
