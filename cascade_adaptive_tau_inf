@@ -127,12 +127,6 @@ for i in range(cvs.shape[1]):
     bounds.append(bootstrap(cvs[:, i], 100)[0])
 bounds=np.array(bounds)
 
-data=np.random.randint(16, size=10)
-nb=1000
-res = bootstrap(data,nb)
-print(res[0])
-print(res[1])
-
 prange=np.arange(1, nnum+1)
 teq=gettn(prange, fbx, tm0)
 ceq=getceq(prange, fbx, cv0)
