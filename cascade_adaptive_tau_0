@@ -31,7 +31,7 @@ def run_test(f, k, M, pr, c, vth, tauv, tauvth, vthb, cvth, alpha, cv,
             timer = delta_t
         tcurr += tmin
         for i in range(len(vs)):
-            if vs[i] >= vths[i]:
+            if vs[i] >= vths[i]: # if > 0 it fits the mean better, if >= 0 noise fits better
                 vths[i]=vths[i]+get_vth(vs[i], cvth, alpha, cv)
                 vs[i] = 0
                 AP_times[i].append(tcurr)
@@ -89,7 +89,7 @@ delta_t = 0.001
 # #%%
 # =============================================================================
 
-navgs=20
+navgs=100
 T=[]
 CVT2=[]
 for i in range(navgs):
