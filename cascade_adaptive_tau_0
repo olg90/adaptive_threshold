@@ -31,7 +31,7 @@ def run_test(f, k, M, pr, c, vth, tauv, tauvth, vthb, cvth, alpha, cv,
             timer = delta_t
         tcurr += tmin
         for i in range(len(vs)):
-            if vs[i] > vths[i]:
+            if vs[i] >= vths[i]:
                 vths[i]=vths[i]+get_vth(vs[i], cvth, alpha, cv)
                 vs[i] = 0
                 AP_times[i].append(tcurr)
@@ -71,10 +71,10 @@ cvth=0
 alpha=0
 cv=1
 
-pg=0.1
+pg=0.02
 
 nnum = 20 # num neurons in sequence
-tmax = 100 # 30
+tmax = 200 # 30
 
 delta_t = 0.001
 
@@ -89,7 +89,7 @@ delta_t = 0.001
 # #%%
 # =============================================================================
 
-navgs=1
+navgs=20
 T=[]
 CVT2=[]
 for i in range(navgs):
@@ -114,7 +114,7 @@ def bootstrap(data, n_bootstraps, percentiles=(2.5, 97.5)):
         #tab2
         bootstrap_sample = np.random.choice(data, size=n_samples, replace=True)
         mean = np.mean(bootstrap_sample)
-        variance = np.var(bootstrap_sample, ddof=1)  # Sample variance
+        variance = np.var(bootstrap_sample)  # Sample variance
         squared_cv = variance / (mean ** 2) if mean != 0 else np.nan
         means.append(mean)
         cvs_squared.append(squared_cv)
@@ -128,18 +128,20 @@ for i in range(cvs.shape[1]):
     bounds.append(bootstrap(cvs[:, i], 100)[0])
 bounds=np.array(bounds)
 
-bmean=1/pg
 def getceq(bmean, vth, n, cv0):
     Css = (bmean+1)/(bmean+vth)
     return Css+(bmean/(bmean+vth))**n*((bmean+vth)*cv0-(1+bmean))/(bmean+vth)
 
-cv0=1
-bmean=1/pg
-tm0=1/f
-
 def gettn(n, bmean, X, tm0):
     return (X/bmean+1)**(n)*tm0
+
 bmean=1/pg
+cv0=1
+tm0=1/f
+
+prange=np.arange(1, nnum+1)
+teq=gettn(prange, bmean, vth, 1/f)
+ceq=getceq(bmean, vth,np.arange(1, nnum+1), cv0)
 
 fig, ax = plt.subplots(2,1)
 prange=np.arange(1,nnum+1)
