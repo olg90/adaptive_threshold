@@ -3,7 +3,8 @@ from matplotlib.pyplot import plot as pt
 import matplotlib.pyplot as plt
 from numpy.random import exponential, binomial, gamma
 from numpy import exp
-
+from numpy import sqrt as Sqrt
+from numpy import log as Log
 
 def simulate(n, v, f, pr, M, k, c, vth, tauv, tauvth, vthb, cvth, cv, alpha, tmax, delta_t):
 
@@ -149,6 +150,156 @@ def cvt2(c,f,k,M,pr,tauv, tauvth, vthb, kx):
     (E**(((kx*tauvth)/vthb + ((k + f*pr)*vthb)/(c*f*k*M*pr))/tauvth)*(k + f*pr)*tauvth*vthb*\
     (vthb - vthb/(1 - (kx*tauvth + ((k + f*pr)*vthb**2)/(c*f*k*M*pr))/(tauv*vthb))**(tauv/tauvth))))**2)
 
+def tmeantaux(tauv, c, f, k, M, pr, kx, vthb, i):
+    if i ==0:
+        return tauv * np.log((kx + (2 * c * f * k * M * pr * tauv) / (k + f * pr) + 
+                              np.sqrt((4 * c * f * k * kx * M * pr * tauv) / (k + f * pr) + (kx - vthb)**2) - vthb) / 
+                             (2 * ((c * f * k * M * pr * tauv) / (k + f * pr) - vthb)))
+
+    if i == 1:
+        return tauv * np.log((c * f * k * M * pr * tauv * (kx + vthb)) / 
+                             (vthb * (c * f * k * M * pr * tauv - k * vthb - f * pr * vthb)))
+    if i == 2:
+        sqrt_term = np.sqrt((c**2 * f**2 * k**2 * kx**2 * M**2 * pr**2 * tauv**2) / (k + f * pr)**2 -
+                            (2 * c * f * k * kx * M * pr * tauv * vthb**2) / (k + f * pr) + 
+                            4 * kx * vthb**3 + vthb**4)
+        return tauv * np.log((c * f * k * M * pr * tauv * (c * f * k * kx * M * pr * tauv + 
+                              (k + f * pr) * (vthb**2 + sqrt_term))) / 
+                             (2 * (k + f * pr) * vthb**2 * (c * f * k * M * pr * tauv - (k + f * pr) * vthb)))
+
+def cvttaux(c,f,k,M,pr,tauv,kx,vthb, i):
+    if i==0:
+        return         (-(c*f*k*M*pr*tauv - (2*c*f*k*M*pr*tauv*((c*f*k*M*pr*tauv)/(k + f*pr) - vthb))/\
+(kx + (2*c*f*k*M*pr*tauv)/(k + f*pr) + Sqrt((4*c*f*k*kx*M*pr*tauv)/(k + f*pr) + (kx - vthb)**2) - vthb))**2 + \
+(2*c**2*f*k*M*pr*tauv*(-((c*f*k*M*pr*tauv)/(k + f*pr)) + vthb)**2*\
+((2*k**4*(k + f*pr)*tauv**2*(1 + pr*(-1 + M - 2*f*M*tauv) +\
+((1 + pr*(-1 + M + 2*f*M*tauv))*(kx + (2*c*f*k*M*pr*tauv)/(k + f*pr) +\
+Sqrt((4*c*f*k*kx*M*pr*tauv)/(k + f*pr) + (kx - vthb)**2) - vthb))/(2.*((c*f*k*M*pr*tauv)/(k + f*pr) - vthb)))*\
+(kx + Sqrt((4*c*f*k*kx*M*pr*tauv)/(k + f*pr) + (kx - vthb)**2) + vthb))/(2*c*f*k*M*pr*tauv - 2*(k + f*pr)*vthb) - \
+(f*k**3*pr*(k + f*pr)*tauv**2*(-4 + pr*(3 - 2*M*(1 + f*(-6 + pr)*tauv)) + \
+((-4 + pr*(3 + 2*M*(-1 + f*(-6 + pr)*tauv)))*\
+(kx + (2*c*f*k*M*pr*tauv)/(k + f*pr) + Sqrt((4*c*f*k*kx*M*pr*tauv)/(k + f*pr) + (kx - vthb)**2) - vthb))/\
+(2.*((c*f*k*M*pr*tauv)/(k + f*pr) - vthb)))*(kx + Sqrt((4*c*f*k*kx*M*pr*tauv)/(k + f*pr) + (kx - vthb)**2) + vthb))/\
+(2*c*f*k*M*pr*tauv - 2*(k + f*pr)*vthb) - f**2*(-2 + pr)*pr**2*(-1 + f**2*pr**2*tauv**2)*\
+(-1 + (kx + (2*c*f*k*M*pr*tauv)/(k + f*pr) + Sqrt((4*c*f*k*kx*M*pr*tauv)/(k + f*pr) + (kx - vthb)**2) - vthb)**2/\
+(4.*(-((c*f*k*M*pr*tauv)/(k + f*pr)) + vthb)**2)) + \
+f*k*pr*(4 + pr*(-3 + 2*M + 4*f*(-1 + M)*(-1 + pr)*tauv + f**2*(-4 + pr)*pr*tauv**2 - 2*f**3*M*(-2 + pr)*pr**2*tauv**3) +\
+(2*f*M*(-2 + pr)*pr*tauv*(-1 + f**2*pr**2*tauv**2)*\
+(kx + (2*c*f*k*M*pr*tauv)/(k + f*pr) + Sqrt((4*c*f*k*kx*M*pr*tauv)/(k + f*pr) + (kx - vthb)**2) - vthb))/\
+((c*f*k*M*pr*tauv)/(k + f*pr) - vthb) -\
+2**(1 + k*tauv + f*pr*tauv)*f*pr*(2 + (-2 + M)*pr)*tauv*\
+((kx + (2*c*f*k*M*pr*tauv)/(k + f*pr) + Sqrt((4*c*f*k*kx*M*pr*tauv)/(k + f*pr) + (kx - vthb)**2) - vthb)/\
+((c*f*k*M*pr*tauv)/(k + f*pr) - vthb))**(1 - k*tauv - f*pr*tauv) - \
+((4 + pr*(-3 + 2*M - 4*f*(-1 + M)*(-1 + pr)*tauv + f**2*(-4 + pr)*pr*tauv**2 + 2*f**3*M*(-2 + pr)*pr**2*tauv**3))*\
+(kx + (2*c*f*k*M*pr*tauv)/(k + f*pr) + Sqrt((4*c*f*k*kx*M*pr*tauv)/(k + f*pr) + (kx - vthb)**2) - vthb)**2)/\
+(4.*(-((c*f*k*M*pr*tauv)/(k + f*pr)) + vthb)**2)) + \
+k**2*(2 + pr*(2*(-1 + M) + 4*f*(-1 + M)*(-1 + pr)*tauv + f**2*(-4 + pr)*pr*tauv**2 - 4*f**3*M*(-3 + pr)*pr**2*tauv**3) + \
+(4*f*M*pr*tauv*(1 + f**2*(-3 + pr)*pr**2*tauv**2)*\
+(kx + (2*c*f*k*M*pr*tauv)/(k + f*pr) + Sqrt((4*c*f*k*kx*M*pr*tauv)/(k + f*pr) + (kx - vthb)**2) - vthb))/\
+((c*f*k*M*pr*tauv)/(k + f*pr) - vthb) - \
+2**(2 + k*tauv + f*pr*tauv)*f*pr*(1 + (-1 + M)*pr)*tauv*\
+((kx + (2*c*f*k*M*pr*tauv)/(k + f*pr) + Sqrt((4*c*f*k*kx*M*pr*tauv)/(k + f*pr) + (kx - vthb)**2) - vthb)/\
+((c*f*k*M*pr*tauv)/(k + f*pr) - vthb))**(1 - k*tauv - f*pr*tauv) - \
+((2 + pr*(-2 + f*tauv*(-4 + pr*(4 + f*(-4 + pr)*tauv)) + 2*M*(1 + 2*f*tauv*(1 + pr*(-1 + f**2*(-3 + pr)*pr*tauv**2)))))*\
+(kx + (2*c*f*k*M*pr*tauv)/(k + f*pr) + Sqrt((4*c*f*k*kx*M*pr*tauv)/(k + f*pr) + (kx - vthb)**2) - vthb)**2)/\
+(4.*(-((c*f*k*M*pr*tauv)/(k + f*pr)) + vthb)**2))))/\
+((2*k - f*(-2 + pr)*pr)*(-1 + k*tauv + f*pr*tauv)*(1 + k*tauv + f*pr*tauv)*\
+(kx + (2*c*f*k*M*pr*tauv)/(k + f*pr) + Sqrt((4*c*f*k*kx*M*pr*tauv)/(k + f*pr) + (kx - vthb)**2) - vthb)**2))/\
+((c*f*k*M*pr*tauv - (k + f*pr)*vthb)**2*Log((kx + (2*c*f*k*M*pr*tauv)/(k + f*pr) + \
+Sqrt((4*c*f*k*kx*M*pr*tauv)/(k + f*pr) + (kx - vthb)**2) - vthb)/(2.*((c*f*k*M*pr*tauv)/(k + f*pr) - vthb)))**2)    
+    if i == 1:
+        return         ((-2*(c*f*k*kx*M*pr*tauv + (k + f*pr)*vthb**2)**2)/(kx + vthb)**2 + \
+(vthb**2*(c*f*k*M*pr*tauv - (k + f*pr)*vthb)**2*(-(f**2*(-2 + pr)*pr**2*(-1 + f**2*pr**2*tauv**2)*\
+(-1 + (c**2*f**2*k**2*M**2*pr**2*tauv**2*(kx + vthb)**2)/(vthb**2*(c*f*k*M*pr*tauv - (k + f*pr)*vthb)**2))) - \
+f*k**3*pr*tauv**2*(-4 + pr*(3 - 2*M*(1 + f*(-6 + pr)*tauv)) + \
+(c*f*k*M*pr*tauv*(-4 + pr*(3 + 2*M*(-1 + f*(-6 + pr)*tauv)))*(kx + vthb))/(vthb*(c*f*k*M*pr*tauv - (k + f*pr)*vthb)))*\
+ (-1 - (c*f*k*M*pr*tauv*(kx + vthb))/(vthb*(-(c*f*k*M*pr*tauv) + (k + f*pr)*vthb))) + \
+  f*k*pr*(4 + pr*(-3 + 2*M + 4*f*(-1 + M)*(-1 + pr)*tauv + f**2*(-4 + pr)*pr*tauv**2 - 2*f**3*M*(-2 + pr)*pr**2*tauv**3) - \
+  (c**2*f**2*k**2*M**2*pr**2*tauv**2*(4 + pr*\
+  (-3 + 2*M - 4*f*(-1 + M)*(-1 + pr)*tauv + f**2*(-4 + pr)*pr*tauv**2 + 2*f**3*M*(-2 + pr)*pr**2*tauv**3))*(kx + vthb)**2)/\
+  (vthb**2*(c*f*k*M*pr*tauv - (k + f*pr)*vthb)**2) - \
+  4*f*pr*(2 + (-2 + M)*pr)*tauv*(-((c*f*k*M*pr*tauv*(kx + vthb))/(vthb*(-(c*f*k*M*pr*tauv) + (k + f*pr)*vthb))))**\
+   (1 - k*tauv - f*pr*tauv) - (4*c*f**2*k*M**2*(-2 + pr)*pr**2*tauv**2*(-1 + f**2*pr**2*tauv**2)*(kx + vthb))/\
+   (vthb*(-(c*f*k*M*pr*tauv) + (k + f*pr)*vthb))) + \
+   k**2*(2 + pr*(2*(-1 + M) + 4*f*(-1 + M)*(-1 + pr)*tauv + f**2*(-4 + pr)*pr*tauv**2 - 4*f**3*M*(-3 + pr)*pr**2*tauv**3) -\
+   (c**2*f**2*k**2*M**2*pr**2*tauv**2*(2 + pr*\
+   (-2 + f*tauv*(-4 + pr*(4 + f*(-4 + pr)*tauv)) + 2*M*(1 + 2*f*tauv*(1 + pr*(-1 + f**2*(-3 + pr)*pr*tauv**2)))))*\
+   (kx + vthb)**2)/(vthb**2*(c*f*k*M*pr*tauv - (k + f*pr)*vthb)**2) - \
+   8*f*pr*(1 + (-1 + M)*pr)*tauv*(-((c*f*k*M*pr*tauv*(kx + vthb))/(vthb*(-(c*f*k*M*pr*tauv) + (k + f*pr)*vthb))))**\
+   (1 - k*tauv - f*pr*tauv) - (8*c*f**2*k*M**2*pr**2*tauv**2*(1 + f**2*(-3 + pr)*pr**2*tauv**2)*(kx + vthb))/\
+   (vthb*(-(c*f*k*M*pr*tauv) + (k + f*pr)*vthb))) + \
+   (2*k**4*tauv**2*(c*f*k*kx*M*pr*tauv + (k + f*pr)*vthb**2)*\
+   ((k + f*pr)*(-1 + pr + M*pr*(-1 + 2*f*tauv))*vthb**2 + \
+   c*f*k*M*pr*tauv*(kx + kx*pr*(-1 + M + 2*f*M*tauv) + 2*(vthb + (-1 + M)*pr*vthb))))/\
+   (vthb**2*(c*f*k*M*pr*tauv - (k + f*pr)*vthb)**2)))/\
+   (f*k*M*pr*(2*k - f*(-2 + pr)*pr)*tauv*(-1 + k*tauv + f*pr*tauv)*(1 + k*tauv + f*pr*tauv)*(kx + vthb)**2))/\
+   (2.*(c*f*k*M*pr*tauv - (k + f*pr)*vthb)**2*Log((c*f*k*M*pr*tauv*(kx + vthb))/(vthb*(c*f*k*M*pr*tauv - k*vthb - f*pr*vthb)))**2)
+    if i == 2:
+        return        ((k + f*pr)**2*(-((c*f*k*M*pr*tauv - (2*(k + f*pr)*vthb**2*(c*f*k*M*pr*tauv - (k + f*pr)*vthb))/\
+(c*f*k*kx*M*pr*tauv + (k + f*pr)*(vthb**2 + \
+Sqrt((c**2*f**2*k**2*kx**2*M**2*pr**2*tauv**2)/(k + f*pr)**2 - (2*c*f*k*kx*M*pr*tauv*vthb**2)/(k + f*pr) + \
+vthb**3*(4*kx + vthb)))))**2/(k + f*pr)**2) + \
+(2*vthb**4*(c*f*k*M*pr*tauv - (k + f*pr)*vthb)**2*\
+(2*k**4*tauv**2*(-1 + (c*f*k*M*pr*tauv*(c*f*k*kx*M*pr*tauv + \
+(k + f*pr)*(vthb**2 + Sqrt((c**2*f**2*k**2*kx**2*M**2*pr**2*tauv**2)/(k + f*pr)**2 - \
+(2*c*f*k*kx*M*pr*tauv*vthb**2)/(k + f*pr) + vthb**3*(4*kx + vthb)))))/\
+(2.*(k + f*pr)*vthb**2*(c*f*k*M*pr*tauv - (k + f*pr)*vthb)))*\
+(1 + pr*(-1 + M - 2*f*M*tauv) + (c*f*k*M*pr*tauv*(1 + pr*(-1 + M + 2*f*M*tauv))*\
+(c*f*k*kx*M*pr*tauv + (k + f*pr)*(vthb**2 + \
+Sqrt((c**2*f**2*k**2*kx**2*M**2*pr**2*tauv**2)/(k + f*pr)**2 - (2*c*f*k*kx*M*pr*tauv*vthb**2)/(k + f*pr) + \
+vthb**3*(4*kx + vthb)))))/(2.*(k + f*pr)*vthb**2*(c*f*k*M*pr*tauv - (k + f*pr)*vthb))) -\
+f*k**3*pr*tauv**2*(-1 + (c*f*k*M*pr*tauv*(c*f*k*kx*M*pr*tauv +\
+(k + f*pr)*(vthb**2 + Sqrt((c**2*f**2*k**2*kx**2*M**2*pr**2*tauv**2)/(k + f*pr)**2 -\
+(2*c*f*k*kx*M*pr*tauv*vthb**2)/(k + f*pr) + vthb**3*(4*kx + vthb)))))/\
+(2.*(k + f*pr)*vthb**2*(c*f*k*M*pr*tauv - (k + f*pr)*vthb)))*\
+(-4 + pr*(3 - 2*M*(1 + f*(-6 + pr)*tauv)) + \
+(c*f*k*M*pr*tauv*(-4 + pr*(3 + 2*M*(-1 + f*(-6 + pr)*tauv)))*\
+(c*f*k*kx*M*pr*tauv + (k + f*pr)*(vthb**2 +\
+Sqrt((c**2*f**2*k**2*kx**2*M**2*pr**2*tauv**2)/(k + f*pr)**2 - (2*c*f*k*kx*M*pr*tauv*vthb**2)/(k + f*pr) +\
+vthb**3*(4*kx + vthb)))))/(2.*(k + f*pr)*vthb**2*(c*f*k*M*pr*tauv - (k + f*pr)*vthb))) -\
+f**2*(-2 + pr)*pr**2*(-1 + f**2*pr**2*tauv**2)*\
+(-1 + (c**2*f**2*k**2*M**2*pr**2*tauv**2*\
+(c*f*k*kx*M*pr*tauv + (k + f*pr)*(vthb**2 + \
+Sqrt((c**2*f**2*k**2*kx**2*M**2*pr**2*tauv**2)/(k + f*pr)**2 - (2*c*f*k*kx*M*pr*tauv*vthb**2)/(k + f*pr) +\
+vthb**3*(4*kx + vthb))))**2)/(4.*(k + f*pr)**2*vthb**4*(c*f*k*M*pr*tauv - (k + f*pr)*vthb)**2)) + \
+f*k*pr*(4 + pr*(-3 + 2*M + 4*f*(-1 + M)*(-1 + pr)*tauv + f**2*(-4 + pr)*pr*tauv**2 - 2*f**3*M*(-2 + pr)*pr**2*tauv**3) +\
+(2*c*f**2*k*M**2*(-2 + pr)*pr**2*tauv**2*(-1 + f**2*pr**2*tauv**2)*\
+(c*f*k*kx*M*pr*tauv + (k + f*pr)*(vthb**2 + \
+Sqrt((c**2*f**2*k**2*kx**2*M**2*pr**2*tauv**2)/(k + f*pr)**2 - (2*c*f*k*kx*M*pr*tauv*vthb**2)/(k + f*pr) +\
+ vthb**3*(4*kx + vthb)))))/((k + f*pr)*vthb**2*(c*f*k*M*pr*tauv - (k + f*pr)*vthb)) -\
+ (c**2*f**2*k**2*M**2*pr**2*tauv**2*(4 + \
+ pr*(-3 + 2*M - 4*f*(-1 + M)*(-1 + pr)*tauv + f**2*(-4 + pr)*pr*tauv**2 + 2*f**3*M*(-2 + pr)*pr**2*tauv**3))*\
+ (c*f*k*kx*M*pr*tauv + (k + f*pr)*(vthb**2 + \
+ Sqrt((c**2*f**2*k**2*kx**2*M**2*pr**2*tauv**2)/(k + f*pr)**2 - (2*c*f*k*kx*M*pr*tauv*vthb**2)/(k + f*pr) +\
+  vthb**3*(4*kx + vthb))))**2)/(4.*(k + f*pr)**2*vthb**4*(c*f*k*M*pr*tauv - (k + f*pr)*vthb)**2) -\
+   2**(1 + k*tauv + f*pr*tauv)*f*pr*(2 + (-2 + M)*pr)*tauv*\
+   ((c*f*k*M*pr*tauv*(c*f*k*kx*M*pr*tauv + \
+   (k + f*pr)*(vthb**2 + Sqrt((c**2*f**2*k**2*kx**2*M**2*pr**2*tauv**2)/(k + f*pr)**2 -\
+   (2*c*f*k*kx*M*pr*tauv*vthb**2)/(k + f*pr) + vthb**3*(4*kx + vthb)))))/\
+   ((k + f*pr)*vthb**2*(c*f*k*M*pr*tauv - (k + f*pr)*vthb)))**(1 - k*tauv - f*pr*tauv)) +\
+   k**2*(2 + pr*(2*(-1 + M) + 4*f*(-1 + M)*(-1 + pr)*tauv + f**2*(-4 + pr)*pr*tauv**2 - 4*f**3*M*(-3 + pr)*pr**2*tauv**3) + \
+   (4*c*f**2*k*M**2*pr**2*tauv**2*(1 + f**2*(-3 + pr)*pr**2*tauv**2)*\
+   (c*f*k*kx*M*pr*tauv + (k + f*pr)*(vthb**2 + \
+   Sqrt((c**2*f**2*k**2*kx**2*M**2*pr**2*tauv**2)/(k + f*pr)**2 - (2*c*f*k*kx*M*pr*tauv*vthb**2)/(k + f*pr) + \
+   vthb**3*(4*kx + vthb)))))/((k + f*pr)*vthb**2*(c*f*k*M*pr*tauv - (k + f*pr)*vthb)) - \
+   (c**2*f**2*k**2*M**2*pr**2*tauv**2*(2 +\
+   pr*(-2 + f*tauv*(-4 + pr*(4 + f*(-4 + pr)*tauv)) + 2*M*(1 + 2*f*tauv*(1 + pr*(-1 + f**2*(-3 + pr)*pr*tauv**2)))))*\
+   (c*f*k*kx*M*pr*tauv + (k + f*pr)*(vthb**2 + \
+   Sqrt((c**2*f**2*k**2*kx**2*M**2*pr**2*tauv**2)/(k + f*pr)**2 - (2*c*f*k*kx*M*pr*tauv*vthb**2)/(k + f*pr) +\
+   vthb**3*(4*kx + vthb))))**2)/(4.*(k + f*pr)**2*vthb**4*(c*f*k*M*pr*tauv - (k + f*pr)*vthb)**2) - \
+   2**(2 + k*tauv + f*pr*tauv)*f*pr*(1 + (-1 + M)*pr)*tauv*\
+   ((c*f*k*M*pr*tauv*(c*f*k*kx*M*pr*tauv + \
+   (k + f*pr)*(vthb**2 + Sqrt((c**2*f**2*k**2*kx**2*M**2*pr**2*tauv**2)/(k + f*pr)**2 -\
+   (2*c*f*k*kx*M*pr*tauv*vthb**2)/(k + f*pr) + vthb**3*(4*kx + vthb)))))/\
+   ((k + f*pr)*vthb**2*(c*f*k*M*pr*tauv - (k + f*pr)*vthb)))**(1 - k*tauv - f*pr*tauv))))/\
+   (f*k*M*pr*(2*k - f*(-2 + pr)*pr)*tauv*(-1 + k*tauv + f*pr*tauv)*(1 + k*tauv + f*pr*tauv)*\
+   (c*f*k*kx*M*pr*tauv + (k + f*pr)*(vthb**2 + \
+   Sqrt((c**2*f**2*k**2*kx**2*M**2*pr**2*tauv**2)/(k + f*pr)**2 - (2*c*f*k*kx*M*pr*tauv*vthb**2)/(k + f*pr) +\
+   vthb**3*(4*kx + vthb))))**2)))/\
+   ((c*f*k*M*pr*tauv - (k + f*pr)*vthb)**2*(Log(2) - Log((c*f*k*M*pr*tauv*\
+   (c*f*k*kx*M*pr*tauv + (k + f*pr)*(vthb**2 + \
+   Sqrt((c**2*f**2*k**2*kx**2*M**2*pr**2*tauv**2)/(k + f*pr)**2 - (2*c*f*k*kx*M*pr*tauv*vthb**2)/(k + f*pr) + \
+   vthb**3*(4*kx + vthb)))))/((k + f*pr)*vthb**2*(c*f*k*M*pr*tauv - (k + f*pr)*vthb))))**2)    
 ###############################################################################
 #
 #                               Main code
@@ -161,7 +312,7 @@ M=100
 k=100
 c=0.005
 tauv=1
-tauvth=0.1
+tauvth=1
 
 n=0 # occupied states
 v=0
@@ -180,12 +331,41 @@ delta_t = 0.001
 tmax = 20 # <-------------- TMAX
 
 xlist=np.linspace(0.01, 100, 100)
+
+Tlist=[]
+Clist=[]
+alist=[0,1,2]
 navgs=1
-Tsim, Csim =gettaca(cvth, alpha, navgs, xlist)
-Teq=tmean(cvth, tauvth, vthb, k, xlist, pr, c, M)
-Ceq=cvt2(c, xlist, k, M, pr, tauv, tauvth, vthb, cvth)
+for i in range(len(alist)):
+    print(i)
+    Tsim, Csim =gettaca(cvth, alist[i], navgs, xlist)        
+    Teq=tmeantaux(tauv, c, xlist, k, M, pr, cvth, vthb, i)
+    Ceq=cvttaux(c, xlist, k, M, pr, tauv, cvth, vthb, i)
+    Tlist.append([Tsim, Teq])
+    Clist.append([Csim, Ceq])
+    
+fig, ax = plt.subplots(2,1, figsize=(4,3.5))
+ax[0].set_ylabel('Output\nfrequency (Hz)')
+for i in range(len(alist)):
+    ax[0].plot(xlist, 1/Tlist[i][0], label='sim {}'.format(alist[i]))
+    ax[0].plot(xlist, 1/Tlist[i][1], label='eq {}'.format(alist[i]))
+ax[0].set_xticks([])
+# =============================================================================
+# ax[0].set_ylim([0, 1])
+# =============================================================================
+ax[0].legend()
+for i in range(len(alist)):
+    ax[1].plot(xlist, Clist[i][0], label='sim {}'.format(alist[i]))
+    ax[1].plot(xlist, Clist[i][1], label='eq {}'.format(alist[i]))
+# =============================================================================
+# ax[1].set_ylim([0,1])
+# =============================================================================
+ax[1].set_xlabel('Input Frequency (Hz)')
+ax[1].set_ylabel('Coefficient of\nvariation squared')
+ax[1].legend()
+plt.show()
 
-
+#%%
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 
