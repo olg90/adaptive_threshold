@@ -387,13 +387,13 @@ cv=vthb #0.1
 delta_t = 0.001
 tmax = 30 # 30 # <-------------- TMAX
 
-xlist=np.linspace(0.01, 100, 100)
+xlist=np.linspace(0.01, 100, 20)
 xlist2=np.linspace(xlist[0], xlist[-1], 1000)
 
 Tlist=[]
 Clist=[]
 alist=[0,1,2]
-navgs=20 # 20
+navgs=5 # 20
 for i in range(len(alist)):
     print(i)
     Tsim, Csim =gettaca(cvth, alist[i], navgs, xlist)        
@@ -402,6 +402,36 @@ for i in range(len(alist)):
     Tlist.append([Tsim, Teq])
     Clist.append([Csim, Ceq])
     #%%
+    
+# Check simulations
+f=100
+pr=1
+M=100
+k=100
+c=0.01
+tauv=0.05
+tauvth=tauv
+
+n=0 # occupied states
+v=0
+
+vthb=0.1
+vth=vthb
+
+# alpha = 0  constant jumps
+# cvth = 0  fixed threshold
+
+cvth=0.1
+alpha=2
+cv=vthb #0.1
+
+delta_t = 0.001
+tmax = 30 # 30 # <-------------- TMAX
+
+xlist2=np.linspace(0, 100, 1000)
+
+plt.plot(xlist2, 1/tmeantaux(tauv, c, xlist2, k, M, pr, cvth, vthb, 2))
+#%%
 plt.rcParams.update({'font.size': 15})  # Set font size globally
 fig, ax = plt.subplots(2,1, figsize=(4,3.5))
 ax[0].set_ylabel('Output\nfrequency (Hz)')
@@ -557,12 +587,12 @@ ax[3].set_xlabel('Time (sec)')
 #%%
 # Figure plot simulations, three alphas
 f=100
-pr=0.2
+pr=1
 M=100
 k=10
-c=0.01
-tauv=1
-tauvth=0.05
+c=0.005
+tauv=np.inf
+tauvth=0.1 #0.1
 
 n=0 # occupied states
 v=0
@@ -578,10 +608,11 @@ alpha=0
 cv=vthb #0.1
 
 delta_t = 0.001
-tmax = 1 # <-------------- TMAX
+tmax = 30 # <-------------- TMAX
 
 # Figure for plot simulations
-xlist=np.linspace(0.01, 100, 20)
+xlist=np.linspace(0.01, 100, 50)
+xlist2=np.linspace(0.01, 100, 100)
 navgs=10
 
 alphas = [0,1,2]
@@ -590,12 +621,28 @@ for a in alphas:
     Ta=getta(cvth, a, navgs, xlist)
     talist.append(Ta)
 
-linestyles=['-', '--', '-.']
+def ttauinf(k, xb, f, pr, c, kx, M, taux, i):
+    if i == 0:
+        return (k * xb + f * pr * xb + 
+                np.sqrt(k + f * pr) * np.sqrt(4 * c * f * k * kx * M * pr * taux + (k + f * pr) * xb**2)) / (2 * c * f * k * M * pr)
+    
+    if i == 1:
+        return (kx * taux) / xb + ((k + f * pr) * xb) / (c * f * k * M * pr)
+    
+    if i == 2:
+        return -(((k + f * pr)**2 * xb**3) / (c * f * k * M * pr * (c * f * k * kx * M * pr * taux - (k + f * pr) * xb**2)))
+    
+plt.rcParams.update({'font.size': 15})  # Set font size globally
+cs=['r','g','b']
+ms=['o','x','s']
+
 lw=3
 plt.figure(figsize=(4,3.5))
 for i in range(len(alphas)):
-    plt.plot(xlist, 1/talist[i], label=r'$\alpha$={}'.format(alphas[i]),
-             linestyle=linestyles[i], linewidth=lw)
+    plt.scatter(xlist, 1/talist[i], label=r'$\alpha$={}'.format(alphas[i]), marker=ms[i],
+             linewidth=lw, color=cs[i])
+    plt.plot(xlist2, 1/ttauinf(k, vthb, xlist2, pr, c, cvth, M, tauvth, i),
+             linewidth=lw, color=cs[i], alpha=0.6)
 plt.ylabel('Output frequency (Hz)')
 plt.xlabel('Input frequency (Hz)')
 plt.legend(loc='upper left')
@@ -727,7 +774,7 @@ tmax = 10 # <-------------- TMAX
 def getx(f):
     topen=tauv*np.log(1/(1 - ((k + f*pr) *vth)/(c* f *k* M *pr* tauv)))
     tnew=(cvth *tauvth)/vthb + ((k + f* pr) *vthb)/(c* f* k* M *pr)
-    tol=0.01
+    tol=0.001
 
     tvhrange=np.flip(np.linspace(0.01, 1, 100))
     for tvh in tvhrange:
