@@ -534,7 +534,7 @@ ax[1].set_ylabel('Coefficient of\nvariation squared')
 plt.show()
 
 #%%
-# Figure plot simulations, three alphas
+# Figure plot simulations
 f=100
 pr=0.3
 M=100
@@ -585,35 +585,35 @@ ax[0].set_ylabel('')
 ax[3].plot(res[10],res[12], color='#ff7f0e', label='# of occupied vesicles')
 ax[3].set_xlabel('Time (sec)')
 #%%
-# Figure plot simulations, three alphas
+# Three alphas 0,1,2
 f=100
 pr=0.5
 M=100
-k=10
+k=20
 c=0.01
-tauv=0.1
-tauvth=tauv #0.1
+tauv=0.5
+tauvth=tauv # 0.1
 
 n=0 # occupied states
 v=0
 
-vthb=0.2
-vth=0.2
+vthb=0.4
+vth=vthb
 
 # alpha = 0  constant jumps
 # cvth = 0  fixed threshold
 
-cvth=0.1
+cvth=0.075
 alpha=0
-cv=vthb #0.1
+cv=vthb # 0.1
 
 delta_t = 0.001
 tmax = 30 # <-------------- TMAX
 
 # Figure for plot simulations
-xlist=np.linspace(0, 500, 100)
-xlist2=np.linspace(0, 500, 100)
-navgs=1
+xlist=np.linspace(0, 100, 50)
+xlist2=np.linspace(0, 100, 100)
+navgs=2
 
 alphas = [0,1,2]
 talist=[]
