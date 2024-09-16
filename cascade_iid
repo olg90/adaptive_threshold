@@ -17,29 +17,24 @@ def run_test(f, k, M, pr, c, vth, tauv, tauvth, vthb, cvth, alpha, cv,
     vths= vthb*np.ones(nnum)
     timer = delta_t
     
-    shape=2
-    scale=1/f
-    timer0=np.random.gamma(shape, scale)
-    
     while tcurr < tmax:
 # =============================================================================
 #         print(tcurr/tmax)
 # =============================================================================
 
-        t0=timer0
-        t2=timer
+        t0=np.random.exponential(1/f)
+        t1=timer
         
-        if t0<t2: 
+        if t0<t1: 
 
             b=np.random.binomial(M, pr)
             vs[0]+=c*b
             tmin=t0
             timer -= tmin
-            timer0=np.random.gamma(shape, scale)
 
         else:
-            tmin=t2
-            timer0-=tmin
+            tmin=t1
+            timer-=tmin
             if tcurr>ratio*tmax:
                 for i in range(nnum):
                     vhists[i].append(vs[i])
@@ -147,8 +142,8 @@ def get_vth(v, cvth, alpha, cv):
 ###############################################################################
 
 f = 100
-M = 100
-pr = 0.999
+M = 200
+pr = 0.4999
 c = 1
 k = 0
 tauv=np.inf # 1
@@ -160,8 +155,8 @@ cvth=0
 alpha=0
 cv=0.1
 
-nnum=40 # num neurons in sequence
-tmax = 100 # 30
+nnum=14 # num neurons in sequence
+tmax = 1000 # 30
 
 delta_t = 0.001
 
@@ -177,7 +172,7 @@ delta_t = 0.001
 # #%%
 # =============================================================================
 
-navgs=50
+navgs=5
 T=[]
 CVT2=[]
 
@@ -192,8 +187,8 @@ T = np.array(T)
 CVT2=np.array(CVT2)
 T=np.mean(T, 0)
 CVT2=np.mean(CVT2,0)
-#%%
-fig, ax = plt.subplots(2,1, figsize=(4,3.5))
+
+
 
 def getceq(n, fbx, cv0):
     return 1+(1-fbx)**n*(cv0-1)
@@ -201,17 +196,19 @@ def gettn(n, fbx, tm0):
     return (1/(1-fbx))**n*tm0
 
 fbx=ss.binom.cdf(vth, M, pr)
-cv0=1/2
+cv0=1
 tm0=1/f
 
 prange=np.arange(1, nnum+1)
 teq=gettn(prange, fbx, tm0)
 ceq=getceq(prange, fbx, cv0)
 
+fig, ax = plt.subplots(2,1, figsize=(4,3.5))
 ax[0].plot(prange, T, marker='o', color='b')
 ax[1].plot(prange, CVT2, marker='o', color='orange')
 ax[0].plot(prange, teq)
 ax[1].plot(prange, ceq)
+ax[0].set_ylim([-1, 100])
 ax[1].plot(np.linspace(0,nnum, 100), np.ones(100), color='k')
 ax[1].set_xlabel('Neuron number in sequence')
 ax[0].set_ylabel('First passage time')
