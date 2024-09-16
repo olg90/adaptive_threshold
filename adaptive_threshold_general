@@ -587,12 +587,12 @@ ax[3].set_xlabel('Time (sec)')
 #%%
 # Figure plot simulations, three alphas
 f=100
-pr=1
+pr=0.5
 M=100
 k=10
-c=0.005
-tauv=np.inf
-tauvth=0.1 #0.1
+c=0.01
+tauv=0.1
+tauvth=tauv #0.1
 
 n=0 # occupied states
 v=0
@@ -611,9 +611,9 @@ delta_t = 0.001
 tmax = 30 # <-------------- TMAX
 
 # Figure for plot simulations
-xlist=np.linspace(0.01, 100, 50)
-xlist2=np.linspace(0.01, 100, 100)
-navgs=10
+xlist=np.linspace(0, 500, 100)
+xlist2=np.linspace(0, 500, 100)
+navgs=1
 
 alphas = [0,1,2]
 talist=[]
@@ -621,17 +621,32 @@ for a in alphas:
     Ta=getta(cvth, a, navgs, xlist)
     talist.append(Ta)
 
-def ttauinf(k, xb, f, pr, c, kx, M, taux, i):
+def ttauinf(f, c, k, M, pr, kx, xb, tauv, i):
     if i == 0:
-        return (k * xb + f * pr * xb + 
-                np.sqrt(k + f * pr) * np.sqrt(4 * c * f * k * kx * M * pr * taux + (k + f * pr) * xb**2)) / (2 * c * f * k * M * pr)
+        return tauv * np.log(
+            (kx + (2 * c * f * k * M * pr * tauv) / (k + f * pr) + 
+             np.sqrt((4 * c * f * k * kx * M * pr * tauv) / (k + f * pr) + (kx - xb)**2) - xb) / 
+            (2 * ((c * f * k * M * pr * tauv) / (k + f * pr) - xb))
+        )
     
-    if i == 1:
-        return (kx * taux) / xb + ((k + f * pr) * xb) / (c * f * k * M * pr)
+    elif i == 1:
+        return tauv * np.log(
+            (c * f * k * M * pr * tauv * (kx + xb)) / 
+            (xb * (c * f * k * M * pr * tauv - k * xb - f * pr * xb))
+        )
     
-    if i == 2:
-        return -(((k + f * pr)**2 * xb**3) / (c * f * k * M * pr * (c * f * k * kx * M * pr * taux - (k + f * pr) * xb**2)))
-    
+    elif i == 2:
+        return tauv * np.log(
+            (c * f * k * M * pr * tauv * (c * f * k * kx * M * pr * tauv + (k + f * pr) * 
+             (xb**2 + np.sqrt(
+                (c**2 * f**2 * k**2 * kx**2 * M**2 * pr**2 * tauv**2) / (k + f * pr)**2 - 
+                (2 * c * f * k * kx * M * pr * tauv * xb**2) / (k + f * pr) + 
+                4 * kx * xb**3 + xb**4
+            ))
+            )) / 
+            (2 * (k + f * pr) * xb**2 * (c * f * k * M * pr * tauv - (k + f * pr) * xb))
+        )
+
 plt.rcParams.update({'font.size': 15})  # Set font size globally
 cs=['r','g','b']
 ms=['o','x','s']
@@ -641,7 +656,7 @@ plt.figure(figsize=(4,3.5))
 for i in range(len(alphas)):
     plt.scatter(xlist, 1/talist[i], label=r'$\alpha$={}'.format(alphas[i]), marker=ms[i],
              linewidth=lw, color=cs[i])
-    plt.plot(xlist2, 1/ttauinf(k, vthb, xlist2, pr, c, cvth, M, tauvth, i),
+    plt.plot(xlist2, 1/ttauinf(xlist2, c, k, M, pr, cvth, vthb, tauv, i),
              linewidth=lw, color=cs[i], alpha=0.6)
 plt.ylabel('Output frequency (Hz)')
 plt.xlabel('Input frequency (Hz)')
