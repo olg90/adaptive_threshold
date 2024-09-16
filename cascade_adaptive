@@ -182,7 +182,7 @@ alpha=0
 cv=0.1
 
 nnum=20 # num neurons in sequence
-tmax = 100 # 30
+tmax = 200 # 30
 
 delta_t = 0.001
 
