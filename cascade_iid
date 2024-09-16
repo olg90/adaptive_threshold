@@ -208,7 +208,9 @@ ax[0].plot(prange, T, marker='o', color='b')
 ax[1].plot(prange, CVT2, marker='o', color='orange')
 ax[0].plot(prange, teq)
 ax[1].plot(prange, ceq)
-ax[0].set_ylim([-1, 100])
+# =============================================================================
+# ax[0].set_ylim([-1, 100])
+# =============================================================================
 ax[1].plot(np.linspace(0,nnum, 100), np.ones(100), color='k')
 ax[1].set_xlabel('Neuron number in sequence')
 ax[0].set_ylabel('First passage time')
