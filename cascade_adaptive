@@ -173,7 +173,7 @@ pr = 1
 c = 0.01
 k = 10
 tauv=1 # 1
-tauvth=0.05
+tauvth=0.05 # 0.05
 vth = 0.2
 vthb=0.2
 
@@ -182,7 +182,7 @@ alpha=0
 cv=0.1
 
 nnum=20 # num neurons in sequence
-tmax = 20 # 30
+tmax = 100 # 30
 
 delta_t = 0.001
 
@@ -200,7 +200,7 @@ delta_t = 0.001
 
 # -----------------------------------------------------------------------------
 
-res = getstats0(navgs=3, x=pr)
+res = getstats0(navgs=10, x=pr)
 
 fig, ax = plt.subplots(2,1, figsize=(4,3.5))
 # =============================================================================
@@ -208,7 +208,7 @@ fig, ax = plt.subplots(2,1, figsize=(4,3.5))
 #                             f, M, pr, c,k, tauv, tauvth, vth, vth0, nnum))
 # =============================================================================
 ax[0].plot(range(1,nnum+1), 1/res[0], marker='o', color='k', label='fixed threshold')
-ax[0].set_ylabel('Output frequency (Hz)')
+ax[0].set_ylabel('Output\nfrequency (Hz)')
 ax[0].legend()
 ax[1].plot(range(1, nnum+1), res[1], marker='o', color='k', label='fixed threshold')
 ax[1].set_xlabel('Neuron number in sequence')
