@@ -306,6 +306,148 @@ Sqrt((c**2*f**2*k**2*kx**2*M**2*pr**2*tauv**2)/(k + f*pr)**2 - (2*c*f*k*kx*M*pr*
 #                               Main code
 #
 ###############################################################################
+
+# Plot of sim vs eq of alpha=1 and simulations for alpha=1,2
+
+f=100
+pr=0.1
+M=100
+k=1000
+c=0.01
+tauv=0.06
+tauvth=tauv
+
+n=0 # occupied states
+v=0
+
+vthb=0.2
+vth=vthb
+
+# alpha = 0  constant jumps
+# cvth = 0  fixed threshold
+
+cvth=0.5
+alpha=1
+cv=vthb #0.1
+
+delta_t = 0.001
+tmax = 10 # 30 # <-------------- TMAX
+
+xlist=np.linspace(0.01, 500, 50)
+xlist2=np.linspace(xlist[0], xlist[-1], 1000)
+
+Tlist=[]
+Clist=[]
+alist=[0,1,2]
+navgs = 20 # 20
+for i in range(len(alist)):
+    print(i)
+    Tsim, Csim = gettaca(cvth, alist[i], navgs, xlist)        
+    Teq=tmeantaux(tauv, c, xlist2, k, M, pr, cvth, vthb, i)
+    Ceq=cvttaux(c, xlist2, k, M, pr, tauv, cvth, vthb, i)
+    Tlist.append([Tsim, Teq])
+    Clist.append([Csim, Ceq])
+    
+plt.rcParams.update({'font.size': 15})  # Set font size globally
+
+
+cs=['r', 'g', 'b']
+ms=['o', 'x', 's']
+#%%
+fig, ax = plt.subplots(2,2, figsize=(4,3.5))
+lw=5
+ax[0,0].set_ylabel('Output\nfrequency (Hz)')
+ax[0,0].plot(xlist2, 1/Tlist[0][1], 
+           linewidth=lw, color='k')
+ax[0,0].scatter(xlist, 1/Tlist[0][0], color='red', marker=ms[0])
+ax[0,0].set_xticks([])
+
+ax[0,1].scatter(xlist, 1/Tlist[1][0], color=cs[1], marker=ms[1])
+ax[0,1].scatter(xlist, 1/Tlist[2][0], color=cs[2], marker=ms[2])
+ax[0,1].set_xticks([])
+# =============================================================================
+# ax[0].set_ylim([0, 1])
+# =============================================================================
+ax[1,0].scatter(xlist, Clist[1][0], color='r', marker=ms[0], label=r'$\alpha$={}, simulations'.format(alist[0]))
+ax[1,0].plot(xlist2, Clist[1][1], 
+           linewidth=lw, color='k', label='theoretical')
+ax[1,0].legend()
+
+ax[1,1].scatter(xlist, Clist[1][0], color=cs[1], marker=ms[1], label=r'$\alpha=1$, simulations')
+ax[1,1].scatter(xlist, Clist[2][0], color=cs[2], marker=ms[2], label=r'$\alpha=2$')
+ax[1,1].legend()
+
+ax[1,0].set_ylim([0,0.42])
+ax[1,0].set_xlabel('                                                            Input Frequency (Hz)')
+ax[1,0].set_ylabel('Coefficient of\nvariation squared')
+plt.show()
+#%%
+# =============================================================================
+# # Plot of three alphas simulation vs equation
+# f=100
+# pr=0.1
+# M=100
+# k=1000
+# c=0.01
+# tauv=0.06
+# tauvth=tauv
+# 
+# n=0 # occupied states
+# v=0
+# 
+# vthb=0.2
+# vth=vthb
+# 
+# # alpha = 0  constant jumps
+# # cvth = 0  fixed threshold
+# 
+# cvth=0.5
+# alpha=1
+# cv=vthb #0.1
+# 
+# delta_t = 0.001
+# tmax = 10 # 30 # <-------------- TMAX
+# 
+# xlist=np.linspace(0.01, 500, 50)
+# xlist2=np.linspace(xlist[0], xlist[-1], 1000)
+# 
+# Tlist=[]
+# Clist=[]
+# alist=[0,1,2]
+# navgs = 20 # 20
+# for i in range(len(alist)):
+#     print(i)
+#     Tsim, Csim = gettaca(cvth, alist[i], navgs, xlist)        
+#     Teq=tmeantaux(tauv, c, xlist2, k, M, pr, cvth, vthb, i)
+#     Ceq=cvttaux(c, xlist2, k, M, pr, tauv, cvth, vthb, i)
+#     Tlist.append([Tsim, Teq])
+#     Clist.append([Csim, Ceq])
+#     
+# plt.rcParams.update({'font.size': 15})  # Set font size globally
+# fig, ax = plt.subplots(2,1, figsize=(4,3.5))
+# ax[0].set_ylabel('Output\nfrequency (Hz)')
+# lw=3
+# cs=['r', 'g', 'b']
+# ms=['o', 'x', 's']
+# for i in range(len(alist)):
+#     ax[0].scatter(xlist, 1/Tlist[i][0],color=cs[i], marker=ms[i])
+#     ax[0].plot(xlist2, 1/Tlist[i][1],label=r'$\alpha$={}'.format(alist[i]), 
+#                linewidth=lw, color=cs[i], alpha=0.6)
+# ax[0].set_xticks([])
+# # =============================================================================
+# # ax[0].set_ylim([0, 1])
+# # =============================================================================
+# ax[0].legend()
+# for i in range(len(alist)):
+#     ax[1].scatter(xlist, Clist[i][0], color=cs[i], marker=ms[i])
+#     ax[1].plot(xlist2, Clist[i][1], 
+#                linewidth=lw, color=cs[i], alpha=0.6)
+# ax[1].set_ylim([0,0.42])
+# ax[1].set_xlabel('Input Frequency (Hz)')
+# ax[1].set_ylabel('Coefficient of\nvariation squared')
+# plt.show()
+# =============================================================================
+
 # =============================================================================
 # f=100
 # pr=0.2
@@ -331,7 +473,6 @@ Sqrt((c**2*f**2*k**2*kx**2*M**2*pr**2*tauv**2)/(k + f*pr)**2 - (2*c*f*k*kx*M*pr*
 # delta_t = 0.001
 # tmax = 30 # 30 # <-------------- TMAX
 # 
-# 
 # xlist=np.linspace(0.01, 100, 100)
 # xlist2=np.linspace(xlist[0], xlist[-1], 1000)
 # 
@@ -346,8 +487,6 @@ Sqrt((c**2*f**2*k**2*kx**2*M**2*pr**2*tauv**2)/(k + f*pr)**2 - (2*c*f*k*kx*M*pr*
 #     Tlist.append([Tsim, Teq])
 #     Clist.append([Csim, Ceq])
 # 
-# 
-# 
 # fig, ax = plt.subplots(2,1)
 # for i in range(len(alist)):
 #     print(i)
@@ -358,11 +497,8 @@ Sqrt((c**2*f**2*k**2*kx**2*M**2*pr**2*tauv**2)/(k + f*pr)**2 - (2*c*f*k*kx*M*pr*
 # ax[0].legend()
 # ax[1].legend()
 # 
-#
-#
 ##%%
 # =============================================================================
-
 
 # =============================================================================
 # # Check alpha = 2
@@ -427,81 +563,93 @@ Sqrt((c**2*f**2*k**2*kx**2*M**2*pr**2*tauv**2)/(k + f*pr)**2 - (2*c*f*k*kx*M*pr*
 # #%%
 # =============================================================================
 
-
-# Plot of three alphas simulation vs equation
-f=100
-pr=0.1
-M=100
-k=1000
-c=0.01
-tauv=0.06
-tauvth=tauv
-
-n=0 # occupied states
-v=0
-
-vthb=0.2
-vth=vthb
-
-# alpha = 0  constant jumps
-# cvth = 0  fixed threshold
-
-cvth=0.5
-alpha=1
-cv=vthb #0.1
-
-delta_t = 0.001
-tmax = 10 # 30 # <-------------- TMAX
-
-xlist=np.linspace(0.01, 500, 50)
-xlist2=np.linspace(xlist[0], xlist[-1], 1000)
-
-Tlist=[]
-Clist=[]
-alist=[0,1,2]
-navgs=20 # 20
-for i in range(len(alist)):
-    print(i)
-    Tsim, Csim = gettaca(cvth, alist[i], navgs, xlist)        
-    Teq=tmeantaux(tauv, c, xlist2, k, M, pr, cvth, vthb, i)
-    Ceq=cvttaux(c, xlist2, k, M, pr, tauv, cvth, vthb, i)
-    Tlist.append([Tsim, Teq])
-    Clist.append([Csim, Ceq])
-    
-plt.rcParams.update({'font.size': 15})  # Set font size globally
-fig, ax = plt.subplots(2,1, figsize=(4,3.5))
-ax[0].set_ylabel('Output\nfrequency (Hz)')
-lw=3
-cs=['r', 'g', 'b']
-ms=['o', 'x', 's']
-for i in range(len(alist)):
-    ax[0].scatter(xlist, 1/Tlist[i][0],color=cs[i], marker=ms[i])
-    ax[0].plot(xlist2, 1/Tlist[i][1],label=r'$\alpha$={}'.format(alist[i]), 
-               linewidth=lw, color=cs[i], alpha=0.6)
-ax[0].set_xticks([])
 # =============================================================================
-# ax[0].set_ylim([0, 1])
+# # Plot of three alphas simulation vs equation
+# f=100
+# pr=0.1
+# M=100
+# k=1000
+# c=0.01
+# tauv=0.06
+# tauvth=tauv
+# 
+# n=0 # occupied states
+# v=0
+# 
+# vthb=0.2
+# vth=vthb
+# 
+# # alpha = 0  constant jumps
+# # cvth = 0  fixed threshold
+# 
+# cvth=0.5
+# alpha=1
+# cv=vthb #0.1
+# 
+# delta_t = 0.001
+# tmax = 10 # 30 # <-------------- TMAX
+# 
+# xlist=np.linspace(0.01, 500, 50)
+# xlist2=np.linspace(xlist[0], xlist[-1], 1000)
+# 
+# Tlist=[]
+# Clist=[]
+# alist=[0,1,2]
+# navgs = 20 # 20
+# for i in range(len(alist)):
+#     print(i)
+#     Tsim, Csim = gettaca(cvth, alist[i], navgs, xlist)        
+#     Teq=tmeantaux(tauv, c, xlist2, k, M, pr, cvth, vthb, i)
+#     Ceq=cvttaux(c, xlist2, k, M, pr, tauv, cvth, vthb, i)
+#     Tlist.append([Tsim, Teq])
+#     Clist.append([Csim, Ceq])
+#     
+# plt.rcParams.update({'font.size': 15})  # Set font size globally
+# fig, ax = plt.subplots(2,1, figsize=(4,3.5))
+# ax[0].set_ylabel('Output\nfrequency (Hz)')
+# lw=3
+# cs=['r', 'g', 'b']
+# ms=['o', 'x', 's']
+# for i in range(len(alist)):
+#     ax[0].scatter(xlist, 1/Tlist[i][0],color=cs[i], marker=ms[i])
+#     ax[0].plot(xlist2, 1/Tlist[i][1],label=r'$\alpha$={}'.format(alist[i]), 
+#                linewidth=lw, color=cs[i], alpha=0.6)
+# ax[0].set_xticks([])
+# # =============================================================================
+# # ax[0].set_ylim([0, 1])
+# # =============================================================================
+# ax[0].legend()
+# for i in range(len(alist)):
+#     ax[1].scatter(xlist, Clist[i][0], color=cs[i], marker=ms[i])
+#     ax[1].plot(xlist2, Clist[i][1], 
+#                linewidth=lw, color=cs[i], alpha=0.6)
+# ax[1].set_ylim([0,0.42])
+# ax[1].set_xlabel('Input Frequency (Hz)')
+# ax[1].set_ylabel('Coefficient of\nvariation squared')
+# plt.show()
+# 
 # =============================================================================
-ax[0].legend()
-for i in range(len(alist)):
-    ax[1].scatter(xlist, Clist[i][0], color=cs[i], marker=ms[i])
-    ax[1].plot(xlist2, Clist[i][1], 
-               linewidth=lw, color=cs[i], alpha=0.6)
-ax[1].set_ylim([0,0.42])
-ax[1].set_xlabel('Input Frequency (Hz)')
-ax[1].set_ylabel('Coefficient of\nvariation squared')
-plt.show()
-
 #%%
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import fsolve
 
 # Define the equation to solve A(T,f) - B(T,f) = 0
-def equation(T, f):
+def equation(T, f, c, k, M, pr, tauv, tauvth, vthb, alpha, cvth):
     A=c*f*k*M*pr*tauv/(f*pr+k)
-    res=A*(1-np.exp(-T/tauv))-vthb-cvth*(A*(1-np.exp(-T/tauv))/vthb)**alpha/(np.exp(T/tauv)-1)
+    res=A*(1-np.exp(-T/tauv))-vthb-cvth*(A*(1-np.exp(-T/tauv))/vthb)**alpha/(np.exp(T/tauvth)-1)
     return res
+
+# =============================================================================
+# eq=equation(np.linspace(0,10,100),100)
+# plt.plot(eq)
+# plt.grid(True)
+# plt.ylim([0, 1])
+# plt.xlim([0,3])
+# 
+# =============================================================================
+xs=np.arange(20,100,5)
+x0=[2.5, 1.9, 1.7, 1.65, 1.6, 1.57, 1.55, 1.5, 1.48, 1.46, 1.44, 1.42, 1.41, 1.4,1.38, 1.35]
 
 # Values of f to solve for
 f_values = np.linspace(0, 100, 100)
@@ -510,23 +658,24 @@ pr=0.2
 M=100
 k=100
 c=0.01
-tauv=0.06
-tauvth=1
+tauv=0.05
+tauvth=0.1
 vthb=0.2
 
 cvth=1
 alpha=1
 
-x0=[0.4 for i in range(len(f_values))]
+x0=[2.5, 1.9, 1.7, 1.65, 1.6, 1.57, 1.55, 1.5, 1.48, 1.46, 1.44, 1.42, 1.41, 1.4,1.38, 1.35]
 
 # Solve for T for each f
-T_values = [fsolve(equation, x0[i], args=(f))[0] for i,f in enumerate(f_values)]
+T_values = [fsolve(equation, x0[i], 
+                   args=(f, c, k, M, pr, tauv, tauvth, vthb, alpha, cvth))[0] \
+            for i,f in enumerate(xs)]
 
 # Plot the result
-plt.plot(f_values, T_values)
-plt.xlabel('f')
-plt.ylabel('T')
-plt.title('T vs f that satisfies A(T,f) = B(T,f)')
+plt.plot(xs, 1/np.array(T_values))
+plt.xlabel('Input frequency (Hz)')
+plt.ylabel('Output frequency (Hz)')
 plt.show()
 
 #%%
