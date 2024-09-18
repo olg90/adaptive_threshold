@@ -1,0 +1,260 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.stats import gamma, binom
+
+def run_test(f, k, M, pr, c, vth, tauv, tauvth, vthb, cvth, alpha, cv,
+             nnum, delta_t, tmax, ttype=None):
+    AP_times = [[] for i in range(nnum)]
+    vhists=[[] for i in range(nnum)]
+    thists = [[] for i in range(nnum)]
+    ratio = 0
+    tcurr = 0
+    vs = np.zeros(nnum)
+    timer = delta_t
+    ftimer = gamma.rvs(2, 1/f)
+    while tcurr < tmax:
+        if ftimer<timer:
+            b=np.random.binomial(M, pr)
+            vs[0]=b
+            tmin=ftimer
+            timer -= tmin
+            ftimer=gamma.rvs(2, 1/f)
+        else:
+            tmin=timer
+            ftimer-=tmin
+            timer = delta_t
+            if tcurr>ratio*tmax:
+                for i in range(nnum):
+                    vhists[i].append(vs[i])
+                    thists[i].append(tcurr)
+        tcurr += tmin
+        for i in range(len(vs)):
+            if vs[i] > vth:
+                vs[i] = 0
+                AP_times[i].append(tcurr)
+                if i != nnum-1:
+                    b=np.random.binomial(M, pr)
+                    vs[i+1]=b
+    Tmeans=[np.mean(np.diff(AP_times[i])) for i in range(nnum)]
+    
+    CVT2s=[np.var(np.diff(AP_times[i]))/np.mean(np.diff(AP_times[i]))**2 \
+           for i in range(nnum)]
+    return thists, vhists, AP_times, Tmeans, CVT2s
+
+###############################################################################
+#
+#                               Main Code
+#
+###############################################################################
+
+# =============================================================================
+# f = 100
+# M = 200
+# pr = 0.5
+# c = 1
+# k = 0
+# tauv=np.inf # 1
+# tauvth=1
+# vth = 100
+# vthb = 100
+# 
+# cvth=0
+# alpha=0
+# cv=0.1
+# 
+# nnum = 11 # num neurons in sequence
+# tmax = 1000 # 30
+# 
+# delta_t = 0.001
+# 
+# # =============================================================================
+# # resa = run_test(f, k, M, pr, c, vth, tauv, tauvth, vthb, cvth, alpha, cv, nnum, delta_t, tmax)
+# # 
+# # pnum=4
+# # plt.plot(resa[0][pnum], resa[2][pnum], label='v')
+# # plt.plot(resa[0][pnum], resa[6][pnum], label='vth')
+# # for x in resa[3][pnum]:
+# #     plt.axvline(x=x, color='r', alpha=0.1)
+# # plt.legend()
+# # #%%
+# # =============================================================================
+# 
+# navgs=100
+# T=[]
+# CVT2=[]
+# 
+# for i in range(navgs):
+#     print(i, navgs)
+#     res = run_test(f, k, M, pr, c, vth, tauv, tauvth, vthb, cvth, alpha, cv, nnum, delta_t, tmax)
+#     Tx = res[3]
+#     Cx=res[4]
+#     T.append(Tx)
+#     CVT2.append(Cx)
+#     
+# T = np.array(T)
+# CVT2=np.array(CVT2)
+# cvs=CVT2
+# T=np.mean(T, 0)
+# CVT2=np.mean(CVT2,0)
+# 
+# fbx=ss.binom.cdf(vth, M, pr)
+# cv0=1
+# tm0=1/f
+# 
+# def getceq(n, fbx, cv0):
+#     return 1+(1-fbx)**n*(cv0-1)
+# def gettn(n, fbx, tm0):
+#     return (1/(1-fbx))**n*tm0
+# 
+# def bootstrap(data, n_bootstraps, percentiles=(2.5, 97.5)):
+# #tab1
+#     n_samples = len(data)
+#     means = []
+#     cvs_squared = []
+#     for _ in range(n_bootstraps):
+#         #tab2
+#         bootstrap_sample = np.random.choice(data, size=n_samples, replace=True)
+#         mean = np.mean(bootstrap_sample)
+#         variance = np.var(bootstrap_sample, ddof=1)  # Sample variance
+#         squared_cv = variance / (mean ** 2) if mean != 0 else np.nan
+#         means.append(mean)
+#         cvs_squared.append(squared_cv)
+#     #tab1
+#     mean_ci = np.percentile(means, percentiles)
+#     cv_squared_ci = np.percentile(cvs_squared, percentiles)
+#     return mean_ci, cv_squared_ci
+# 
+# bounds=[]
+# for i in range(cvs.shape[1]):
+#     bounds.append(bootstrap(cvs[:, i], 100)[0])
+# bounds=np.array(bounds)
+# 
+# prange=np.arange(1, nnum+1)
+# teq=gettn(prange, fbx, tm0)
+# ceq=getceq(prange, fbx, cv0)
+# 
+# fig, ax = plt.subplots(2,1, figsize=(4,3.5))
+# ax[0].plot(range(1, nnum+1), 1/T, marker='o', color='b', label='simulations')
+# ax[0].plot(range(1, nnum+1), 1/teq, color='k', label='theoretical')
+# ax[1].plot(range(1, nnum+1), CVT2, marker='o', color='orange')
+# ax[1].plot(range(1, nnum+1), ceq, color='k')
+# ax[1].set_xlabel('Neuron number in sequence')
+# ax[0].set_ylabel('Output\nfrequency (Hz)')
+# ax[1].set_ylabel('Coefficient of\nvariation squared')
+# ax[1].errorbar(prange, CVT2, yerr=[CVT2 - bounds[:, 0], bounds[:, 1] - CVT2], fmt='o', color='orange')
+# ax[0].legend(loc='upper right')
+# # =============================================================================
+# # ax[0].set_yscale('log')
+# # =============================================================================
+# # =============================================================================
+# # ax[1].plot(range(1, nnum+1), (M*pr+1)/(M*pr+vth)*np.ones(nnum))
+# # =============================================================================
+# plt.show()
+# =============================================================================
+
+f = 100
+M = 200
+pr = 0.5
+c = 1
+k = 0
+tauv=np.inf # 1
+tauvth=0.01
+vth = 100
+vthb = 100
+
+cvth=0
+alpha=0
+cv=0.1
+
+nnum = 8 # num neurons in sequence
+tmax = 6000 # 30
+
+delta_t = 0.001
+
+# =============================================================================
+# resa = run_test(f, k, M, pr, c, vth, tauv, tauvth, vthb, cvth, alpha, cv, nnum, delta_t, tmax)
+# 
+# pnum=4
+# plt.plot(resa[0][pnum], resa[2][pnum], label='v')
+# plt.plot(resa[0][pnum], resa[6][pnum], label='vth')
+# for x in resa[3][pnum]:
+#     plt.axvline(x=x, color='r', alpha=0.1)
+# plt.legend()
+# #%%
+# =============================================================================
+
+navgs=10
+T=[]
+CVT2=[]
+
+for i in range(navgs):
+    print(i, navgs)
+    res = run_test(f, k, M, pr, c, vth, tauv, tauvth, vthb, cvth, alpha, cv, nnum, delta_t, tmax)
+    Tx = res[3]
+    Cx=res[4]
+    T.append(Tx)
+    CVT2.append(Cx)
+    
+T = np.array(T)
+CVT2=np.array(CVT2)
+cvs=CVT2
+T=np.mean(T, 0)
+CVT2=np.mean(CVT2,0)
+
+
+
+def bootstrap(data, n_bootstraps, percentiles=(2.5, 97.5)):
+#tab1
+    n_samples = len(data)
+    means = []
+    cvs_squared = []
+    for _ in range(n_bootstraps):
+        #tab2
+        bootstrap_sample = np.random.choice(data, size=n_samples, replace=True)
+        mean = np.mean(bootstrap_sample)
+        variance = np.var(bootstrap_sample, ddof=1)  # Sample variance
+        squared_cv = variance / (mean ** 2) if mean != 0 else np.nan
+        means.append(mean)
+        cvs_squared.append(squared_cv)
+    #tab1
+    mean_ci = np.percentile(means, percentiles)
+    cv_squared_ci = np.percentile(cvs_squared, percentiles)
+    return mean_ci, cv_squared_ci
+
+bounds=[]
+for i in range(cvs.shape[1]):
+    bounds.append(bootstrap(cvs[:, i], 100)[0])
+bounds=np.array(bounds)
+#%%
+
+fbx=binom.cdf(vth, M, pr)
+cv0=1/2
+tm0=2/f # 200/f fits perfectly
+
+def gettn(n, fbx, tm0):
+    a=1/(1-fbx)
+    return (a)**n*tm0
+def getceq(n, fbx, cv0):
+    return 1+(1-fbx)**n*(cv0-1)
+
+prange=np.arange(1, nnum+1)
+teq=gettn(prange, fbx, tm0)
+ceq=getceq(prange, fbx, cv0)
+
+fig, ax = plt.subplots(2,1, figsize=(4,3.5))
+ax[0].plot(range(1, nnum+1), 1/T, marker='o', color='b', label='simulations')
+ax[0].plot(range(1, nnum+1), 1/teq, color='k', label='theoretical')
+ax[1].plot(range(1, nnum+1), CVT2, marker='o', color='orange')
+ax[1].plot(range(1, nnum+1), ceq, color='k')
+ax[1].set_xlabel('Neuron number in sequence')
+ax[0].set_ylabel('Output\nfrequency (Hz)')
+ax[1].set_ylabel('Coefficient of\nvariation squared')
+ax[1].errorbar(prange, CVT2, yerr=[CVT2 - bounds[:, 0], bounds[:, 1] - CVT2], fmt='o', color='orange')
+ax[0].legend(loc='upper right')
+# =============================================================================
+# ax[0].set_yscale('log')
+# =============================================================================
+# =============================================================================
+# ax[1].plot(range(1, nnum+1), (M*pr+1)/(M*pr+vth)*np.ones(nnum))
+# =============================================================================
+plt.show()
