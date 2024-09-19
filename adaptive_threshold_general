@@ -387,6 +387,7 @@ for j in range(navgs):
     # =============================================================================
     ##               (n, v, f, pr, M, k, c, vth, tauv, tauvth, vth0, vthb, tmax, delta_t, None)
     # =============================================================================
+
         Tj.append(res[6])
         T0j.append(res0[6])
         T1j.append(res1[6])
@@ -405,7 +406,6 @@ for j in range(navgs):
     C0.append(C0j)
     C1.append(C1j)
     C2.append(C2j)
-    
 
 T = np.mean(np.array(T), 0)
 T0 = np.mean(np.array(T0), 0)
@@ -421,8 +421,8 @@ fig, ax = plt.subplots(2,1, figsize=(4,3.5))
 ax[0].set_title('Constant threshold jumps')
 ax[0].plot(xlist, T, color='k', label='fixed threshold')
 ax[0].plot(xlist, T0, color='r', label='alpha=0')
-ax[0].plot(xlist, T0, color='g', label='alpha=1')
-ax[0].plot(xlist, T0, color='b', label='alpha=2')
+ax[0].plot(xlist, T1, color='g', label='alpha=1')
+ax[0].plot(xlist, T2, color='b', label='alpha=2')
 ax[0].set_xticks([])
 ax[0].set_ylabel('Output frequency')
 ax[0].legend()
@@ -434,7 +434,6 @@ ax[1].plot(xlist, C2, color='b')
 ax[1].set_ylabel('Coefficient of\nvariation squared')
 ax[1].set_xlabel('Input frequency (Hz)')
 plt.show()
-
 
 #%% # Plot of sim vs eq of alpha=1 and simulations for alpha=1,2
 
