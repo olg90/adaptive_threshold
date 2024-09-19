@@ -167,11 +167,56 @@ def get_vth(v, cvth, alpha, cv):
 #
 ###############################################################################
 
-f = 100
+# =============================================================================
+# # Good parameters
+# f = 100
+# M = 100
+# pr = 0.1
+# c = 0.02
+# k = 100
+# tauv=1 # 1
+# tauvth=0.05 # 0.05
+# vth = 0.2
+# vthb=0.2
+# 
+# cvth=0
+# alpha=0
+# cv=0.1
+# 
+# nnum=20 # num neurons in sequence
+# tmax = 500 # 30
+# 
+# delta_t = 0.001
+# navgs=10
+# =============================================================================
+
+# =============================================================================
+# f = 100
+# M = 100
+# pr = 0.05
+# c = 0.02
+# k = 1000
+# tauv=1000 # 1
+# tauvth=0.05 # 0.05
+# vth = 0.2
+# vthb=0.2
+# 
+# cvth=0
+# alpha=0
+# cv=0.1
+# 
+# nnum=20 # num neurons in sequence
+# tmax = 1000 # 30
+# 
+# delta_t = 0.001
+# navgs=20
+# 
+# =============================================================================
+f = 20
 M = 100
-pr = 0.1
+pr = 0.05
 c = 0.02
-k = 100
+k = 10
 tauv=1 # 1
 tauvth=0.05 # 0.05
 vth = 0.2
@@ -179,30 +224,40 @@ vthb=0.2
 
 cvth=0
 alpha=0
-cv=0.1
+cv=vthb
 
-nnum=20 # num neurons in sequence
-tmax = 500 # 30
+nnum=3 # num neurons in sequence
+tmax = 1 # 30
 
 delta_t = 0.001
 navgs=10
 
-# =============================================================================
-# resa = run_test(f, k, M, pr, c, vth, tauv, tauvth, vthb, cvth, alpha, cv, nnum, delta_t, tmax)
-# 
-# pnum=1
-# plt.plot(resa[0][pnum], resa[2][pnum], label='v')
-# plt.plot(resa[0][pnum], resa[6][pnum], label='vth')
-# for x in resa[3][pnum]:
-#     plt.axvline(x=x, color='r', alpha=0.1)
-# plt.legend()
-# #%%
-# =============================================================================
+resa = run_test(f, k, M, pr, c, vth, tauv, tauvth, vthb, cvth, alpha, cv, nnum, delta_t, tmax)
+#%%
+    
+plt.rcParams.update({'font.size': 15})  # Set font size globally
+fig, ax = plt.subplots(3,1)
+for i in range(3):
+    ax[i].plot(resa[0][i], resa[2][i], label='v', linewidth=3)
+    ax[i].plot(resa[0][i], resa[6][i], label='vth', linewidth=3)
+    if i != 2:
+        ax[i].set_xticks([])
+ax[2].set_xlabel('Time (sec)')
+ax[1].set_ylabel('Membrane potential (volts)')
+    #%%
+
+pnum=1
+plt.plot(resa[0][pnum], resa[2][pnum], label='v')
+plt.plot(resa[0][pnum], resa[6][pnum], label='vth')
+for x in resa[3][pnum]:
+    plt.axvline(x=x, color='r', alpha=0.1)
+plt.legend()
+#%%
 
 # -----------------------------------------------------------------------------
 
 res = getstats0(navgs=navgs, x=pr)
-
+#
 fig, ax = plt.subplots(2,1, figsize=(4,3.5))
 # =============================================================================
 # fig.suptitle('f={}, M={}, pr={}, c={},k={}, tauv={}\ntauvth={}, vthb={}, vth0={}, nnum={}'.format(\
