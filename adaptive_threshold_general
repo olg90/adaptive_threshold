@@ -442,27 +442,27 @@ pr=0.1
 M=100
 k=1000
 c=0.01
-tauv=0.06
+tauv=0.5
 tauvth=tauv
 
 n=0 # occupied states
 v=0
 
-vthb=0.2
+vthb=0.3
 vth=vthb
 
 # alpha = 0  constant jumps
 # cvth = 0  fixed threshold
 
-cvth=0.5
+cvth=0.01
 alpha=1
 cv=vthb #0.1
 
 delta_t = 0.001
 tmax = 10 # 30 # <-------------- TMAX
 
-xlist=np.linspace(0.01, 500, 50)
-xlist2=np.linspace(xlist[0], xlist[-1], 1000)
+xlist=np.linspace(0.01, 200, 50)
+xlist2=np.linspace(xlist[0], xlist[-1], 100)
 
 Tlist=[]
 Clist=[]
@@ -481,7 +481,7 @@ plt.rcParams.update({'font.size': 15})  # Set font size globally
 
 cs=['r', 'g', 'b']
 ms=['o', 'x', 's']
-#%%
+
 fig, ax = plt.subplots(2,2, figsize=(4,3.5))
 lw=5
 ax[0,0].set_ylabel('Output\nfrequency (Hz)')
@@ -505,7 +505,7 @@ ax[1,1].scatter(xlist, Clist[1][0], color=cs[1], marker=ms[1], label=r'$\alpha=1
 ax[1,1].scatter(xlist, Clist[2][0], color=cs[2], marker=ms[2], label=r'$\alpha=2$')
 ax[1,1].legend()
 
-ax[1,0].set_ylim([0,0.42])
+ax[1,0].set_ylim([0,0.5])
 ax[1,0].set_xlabel('                                                            Input Frequency (Hz)')
 ax[1,0].set_ylabel('Coefficient of\nvariation squared')
 plt.show()
