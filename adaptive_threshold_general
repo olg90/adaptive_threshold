@@ -391,7 +391,7 @@ for j in range(navgs):
         Tj.append(res[6])
         T0j.append(res0[6])
         T1j.append(res1[6])
-        T1j.append(res2[6])
+        T2j.append(res2[6])
         Cj.append(res[7])
         C0j.append(res0[7])
         C1j.append(res1[7])
