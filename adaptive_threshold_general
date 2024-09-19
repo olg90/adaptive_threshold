@@ -440,15 +440,15 @@ plt.show()
 f=100
 pr=0.1
 M=100
-k=1000
-c=0.01
+k=100
+c=0.005
 tauv=0.5
 tauvth=tauv
 
 n=0 # occupied states
 v=0
 
-vthb=0.3
+vthb=0.2
 vth=vthb
 
 # alpha = 0  constant jumps
@@ -461,13 +461,13 @@ cv=vthb #0.1
 delta_t = 0.001
 tmax = 10 # 30 # <-------------- TMAX
 
-xlist=np.linspace(0.01, 200, 50)
+xlist=np.linspace(1, 200, 50)
 xlist2=np.linspace(xlist[0], xlist[-1], 100)
 
 Tlist=[]
 Clist=[]
 alist=[0,1,2]
-navgs = 20 # 20
+navgs = 10 # 20
 for i in range(len(alist)):
     print(i)
     Tsim, Csim = gettaca(cvth, alist[i], navgs, xlist)        
@@ -477,8 +477,6 @@ for i in range(len(alist)):
     Clist.append([Csim, Ceq])
     
 plt.rcParams.update({'font.size': 15})  # Set font size globally
-
-
 cs=['r', 'g', 'b']
 ms=['o', 'x', 's']
 
@@ -505,7 +503,9 @@ ax[1,1].scatter(xlist, Clist[1][0], color=cs[1], marker=ms[1], label=r'$\alpha=1
 ax[1,1].scatter(xlist, Clist[2][0], color=cs[2], marker=ms[2], label=r'$\alpha=2$')
 ax[1,1].legend()
 
-ax[1,0].set_ylim([0,0.5])
+# =============================================================================
+# ax[1,0].set_ylim([0,0.5])
+# =============================================================================
 ax[1,0].set_xlabel('                                                            Input Frequency (Hz)')
 ax[1,0].set_ylabel('Coefficient of\nvariation squared')
 plt.show()
