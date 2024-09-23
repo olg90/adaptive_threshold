@@ -1,3 +1,4 @@
+#%%
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -69,8 +70,7 @@ def run_test(f, k, M, pr, c, vth, tauv, tauvth, vthb, cvth, alpha, cv,
         
     return thists, nhists, vhists, AP_times, Tmeans, CVT2s, vthhists
 
-def getstats(navgs, x):
-    pr = x
+def getstats(navgs):
     Tavg=[]
     CVT2avg=[]
     Tavg0=[]
@@ -136,8 +136,7 @@ def getstats(navgs, x):
 
     return Tavg, CVT2avg, Tavg0, CVT2avg0, Tavg1, CVT2avg1, Tavg2, CVT2avg2
 
-def getstats0(navgs, x):
-    pr = x
+def getstats0(navgs):
     Tavg=[]
     CVT2avg=[]
     for i in range(navgs):
@@ -252,26 +251,43 @@ plt.plot(resa[0][pnum], resa[6][pnum], label='vth')
 for x in resa[3][pnum]:
     plt.axvline(x=x, color='r', alpha=0.1)
 plt.legend()
-#%%
+#%% Adaptive cascade plot fixed and alpha=0,1,2
+f = 100
+M = 100
+pr = 1
+c = 0.01
+k = 10
+tauv=1 # 1
+tauvth=1 # 0.05
+vth = 0
+vthb=0.2
 
-# -----------------------------------------------------------------------------
+cvth=0.01
+alpha=0
+cv=vthb
 
-res = getstats0(navgs=navgs, x=pr)
-#
+nnum=5 # num neurons in sequence
+tmax = 30 # 30
+
+delta_t = 0.001
+navgs=3
+# =============================================================================
+# res = getstats0(navgs=navgs, x=pr)
+# =============================================================================
+res = getstats(navgs=navgs)
 fig, ax = plt.subplots(2,1, figsize=(4,3.5))
-# =============================================================================
-# fig.suptitle('f={}, M={}, pr={}, c={},k={}, tauv={}\ntauvth={}, vthb={}, vth0={}, nnum={}'.format(\
-#                             f, M, pr, c,k, tauv, tauvth, vth, vth0, nnum))
-# =============================================================================
 ax[0].plot(range(1,nnum+1), 1/res[0], marker='o', color='k', label='fixed threshold')
+ax[0].plot(range(1,nnum+1), 1/res[2], marker='o', color='r', label='fixed threshold')
+ax[0].plot(range(1,nnum+1), 1/res[4], marker='o', color='g', label='fixed threshold')
+ax[0].plot(range(1,nnum+1), 1/res[6], marker='o', color='b', label='fixed threshold')
 ax[0].set_ylabel('Output\nfrequency (Hz)')
 ax[0].legend()
 ax[1].plot(range(1, nnum+1), res[1], marker='o', color='k', label='fixed threshold')
+ax[1].plot(range(1, nnum+1), res[3], marker='o', color='r', label='fixed threshold')
+ax[1].plot(range(1, nnum+1), res[5], marker='o', color='g', label='fixed threshold')
+ax[1].plot(range(1, nnum+1), res[7], marker='o', color='b', label='fixed threshold')
 ax[1].set_xlabel('Neuron number in sequence')
 ax[1].set_ylabel('Coefficient of\nvariation squared')
-# =============================================================================
-# ax[1].legend()
-# =============================================================================
 #%%
 fig, ax = plt.subplots(2,1, figsize=(4, 3.5))
 ax[0].plot(range(1,nnum+1), 1/res[0], marker='o', color='k', label='fixed threshold')
