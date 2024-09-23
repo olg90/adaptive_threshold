@@ -266,20 +266,21 @@ cvth=0.01
 alpha=0
 cv=vthb
 
-nnum=5 # num neurons in sequence
-tmax = 30 # 30
+nnum=8 # num neurons in sequence
+tmax = 100 # 30
 
 delta_t = 0.001
-navgs=3
+navgs=20
 # =============================================================================
 # res = getstats0(navgs=navgs, x=pr)
 # =============================================================================
 res = getstats(navgs=navgs)
+#%%
 fig, ax = plt.subplots(2,1, figsize=(4,3.5))
 ax[0].plot(range(1,nnum+1), 1/res[0], marker='o', color='k', label='fixed threshold')
-ax[0].plot(range(1,nnum+1), 1/res[2], marker='o', color='r', label='fixed threshold')
-ax[0].plot(range(1,nnum+1), 1/res[4], marker='o', color='g', label='fixed threshold')
-ax[0].plot(range(1,nnum+1), 1/res[6], marker='o', color='b', label='fixed threshold')
+ax[0].plot(range(1,nnum+1), 1/res[2], marker='o', color='r', label=r'$\alpha=0$')
+ax[0].plot(range(1,nnum+1), 1/res[4], marker='o', color='g', label=r'$\alpha=1$')
+ax[0].plot(range(1,nnum+1), 1/res[6], marker='o', color='b', label=r'$\alpha=2$')
 ax[0].set_ylabel('Output\nfrequency (Hz)')
 ax[0].legend()
 ax[1].plot(range(1, nnum+1), res[1], marker='o', color='k', label='fixed threshold')
@@ -288,13 +289,15 @@ ax[1].plot(range(1, nnum+1), res[5], marker='o', color='g', label='fixed thresho
 ax[1].plot(range(1, nnum+1), res[7], marker='o', color='b', label='fixed threshold')
 ax[1].set_xlabel('Neuron number in sequence')
 ax[1].set_ylabel('Coefficient of\nvariation squared')
-#%%
-fig, ax = plt.subplots(2,1, figsize=(4, 3.5))
-ax[0].plot(range(1,nnum+1), 1/res[0], marker='o', color='k', label='fixed threshold')
-ax[1].plot(range(1, nnum+1), res[1], marker='o', color='k', label='fixed threshold')
-ax[1].set_xlabel('Neuron number in sequence')
-ax[1].set_ylabel('Coefficient of\nvariation squared')
-ax[0].set_ylabel('Output\nfrequency (Hz)')
+# =============================================================================
+# #%%
+# fig, ax = plt.subplots(2,1, figsize=(4, 3.5))
+# ax[0].plot(range(1,nnum+1), 1/res[0], marker='o', color='k', label='fixed threshold')
+# ax[1].plot(range(1, nnum+1), res[1], marker='o', color='k', label='fixed threshold')
+# ax[1].set_xlabel('Neuron number in sequence')
+# ax[1].set_ylabel('Coefficient of\nvariation squared')
+# ax[0].set_ylabel('Output\nfrequency (Hz)')
+# =============================================================================
 #%%
 
 # =============================================================================
