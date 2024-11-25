@@ -68,9 +68,8 @@ def simulate(n, v, z, vth, f, pr, M, k, kvz, kthz, vb, tauv, tauz, tauvth, tmax,
     return tlist, nlist, vlist, zlist, vthlist, prelist, postlist, Tmean, CVT2, FFn, FFv, postvth
         
 
-# =============================================================================
-#     return tlist, nlist, vlist, zlist, vthlist
-# =============================================================================
+def tmean(cz,f,k,kv,M,pr,tauv,tauz, tauth, kth):
+    return tauv*np.log((cz*f*k*kv*M*pr*tauv*tauz)/(cz*f*k*M*pr*(-(kth*tauth) + kv*tauv)*tauz - (k + f*pr)*vb))
 
 # =============================================================================
 # f=10
@@ -110,12 +109,13 @@ v=0
 z=0
 vth=vb
 
-kvz=10 # nt effect on v
+kvz=15 # nt effect on v
 kthz=0.1 # nt effect on vth
 
 
 delta_t = 0.001
-tmax = 1 # <-------------- TMAX
+tmax = 30 # <-------------- TMAX
+
 
 
 
@@ -124,7 +124,7 @@ fig, ax = plt.subplots(2,1)
 ax[0].plot(res[0], res[2])
 ax[0].plot(res[0], res[4], color='k')
 ax[1].plot(res[0], res[3])
-#%%
+
 # =============================================================================
 # pre=res[5]
 # for x in pre:
@@ -150,9 +150,8 @@ for j, f in enumerate(flist):
 fig, ax = plt.subplots(2,1)
 ax[0].plot(flist, 1/np.array(tlist))
 ax[1].plot(flist, cvlist)
-# =============================================================================
-# ax[0].plot(flist, 1/tmean(flist, tauv, gz, k, pr, vb, cz, kvz, kthz, M))
-# =============================================================================
+tplot=tmean(cz, flist, k, kvz, M, pr, tauv, tauz, tauvth, kthz)
+ax[0].plot(flist, 1/tplot)
 # =============================================================================
 # ax[0].plot(flist, 1/tmean2(gz, k, flist, pr, vb, cz, kthz, kvz, M))
 # =============================================================================
