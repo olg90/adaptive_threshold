@@ -1,0 +1,177 @@
+#%%
+import numpy as np
+from matplotlib.pyplot import plot as pt
+import matplotlib.pyplot as plt
+from numpy.random import exponential, binomial, gamma
+from numpy import exp
+from numpy import sqrt as Sqrt
+from numpy import log as Log
+
+def simulate(n, v, z, vth, f, pr, M, k, kvz, kthz, vb, gz, tauv, tauz, tauvth, tmax, delta_t):
+
+    nlist=[]
+    vlist=[]
+    vthlist=[]
+    zlist=[]
+    tlist=[]
+    prelist=[]
+    postlist=[]
+    postvth=[]
+    
+    tcurr=0
+    ratio = 0
+    timer = delta_t
+    while tcurr < tmax:
+        t0=exponential(1/f) # action potential
+        t1=exponential(1/(k*(M-n) + 1e-6)) # site gets occupied
+        t2=exponential(1/(gz*z+1e-6))
+        t3 = timer
+
+        if t0 < t1 and t0 < t2 and t0<t3: # AP occurrs
+            b = binomial(n, pr)
+            n-=b
+            z=z+cz*b
+            tmin = t0
+            timer-=tmin
+            prelist.append(tcurr+tmin)
+
+        elif t1<t0 and t1<t2 and t1<t3: # add a docked vesicle
+            n+=1
+            tmin = t1
+            timer-=tmin
+
+        elif t2<t0 and t2<t1 and t2<t3: # add a docked vesicle
+            z-=1
+            tmin = t2
+            timer-=tmin
+
+        else:
+            tmin=t3
+            timer = delta_t
+            if tcurr >= ratio*tmax:
+                nlist.append(n)
+                vlist.append(v)
+                vthlist.append(vth)
+                zlist.append(z)
+                tlist.append(tcurr)
+                
+        tcurr += tmin
+        if v>=vth:
+            postlist.append(tcurr)
+            postvth.append(vth)
+            v=0
+            
+        # Update the continuous dynamics
+
+        v += (-v / tauv + kvz * z) * tmin
+        vth += (-(vth - vb) / tauvth + kthz * z) * tmin
+
+
+    Tlist = np.diff(postlist)
+    Tmean = np.mean(Tlist)
+    CVT2=np.var(Tlist)/Tmean**2
+    FFn=np.var(nlist)/np.mean(nlist)
+    FFv=np.var(vlist)/np.mean(vlist)
+    return tlist, nlist, vlist, zlist, vthlist, prelist, postlist, Tmean, CVT2, FFn, FFv, postvth
+        
+def tmean(f, tauv, gz, k, pr, vb, cz, kvz, kthz, M):
+    return tauv * (tauv * (1 / (1 - (gz * (k + f * pr) * vb) / (cz * f * k * (kvz - kthz) * M * pr * tauv))))
+
+def tmean2(gz, k, f, pr, vb, cz, kthz, kvz, M):
+    return -((gz * (k + f * pr) * vb) / (cz * f * k * (kthz - kvz) * M * pr))
+
+def tmean3(tauv, cz, f, k, kvz, M, pr, kthz, tauvth, gz, vb):
+    return tauv * (cz * f * k * kvz * M * pr * tauv) / (cz * f * k * M * pr * (-kthz * tauvth + kvz * tauv) - gz * (k + f * pr) * vb)
+
+
+# =============================================================================
+#     return tlist, nlist, vlist, zlist, vthlist
+# =============================================================================
+
+# =============================================================================
+# f=10
+# pr=0.2
+# M=100
+# k=10
+# tauv=1
+# tauvth=0.1
+# tauz=1
+# cz=10 # num nt per ap
+# vb=0.2
+# 
+# n=0 # occupied states
+# v=0
+# z=0
+# vth=vb
+# 
+# kvz=0.01 # nt effect on v
+# kthz=0.005 # nt effect on vth
+# gz=10 # nt decay rate
+# 
+# delta_t = 0.001
+# tmax = 10 # <-------------- TMAX
+# =============================================================================
+f=10
+pr=0.2
+M=100
+k=10
+tauv=0.01
+tauvth=0.1
+tauz=0.1
+cz=1 # num nt per ap
+
+n=0 # occupied states
+v=0
+z=0
+vth=0
+
+kvz=10 # nt effect on v
+kthz=1 # nt effect on vth
+gz=100 # nt decay rate
+vb=0.2
+
+delta_t = 0.001
+tmax = 100 # <-------------- TMAX
+
+vs=(cz * f * k * kvz * M * pr * tauv) / (gz * k + f * gz * pr)
+
+res=simulate(n, v, z, vth, f, pr, M, k, kvz, kthz, vb, gz, tauv, tauz, tauvth, tmax, delta_t)
+fig, ax = plt.subplots(2,1)
+ax[0].plot(res[0], res[2])
+ax[0].plot(res[0], res[4], color='k')
+ax[1].plot(res[0], res[3])
+ax[0].plot(np.linspace(0,tmax,100), vs*np.ones(100), color='g')
+#%%
+# =============================================================================
+# pre=res[5]
+# for x in pre:
+#     ax[0].axvline(x=x, color='r', alpha=0.5)
+# =============================================================================
+
+
+navgs=1
+flist=np.linspace(0,500,100)
+tlist=[]
+cvlist=[]
+for j, f in enumerate(flist):
+    tavg=[]
+    cvavg=[]
+    for i in range(navgs):
+        print(j, len(flist), i, navgs)
+        resi=simulate(n, v, z, vth, f, pr, M, k, kvz, kthz, vb, gz, tauv, tauz, tauvth, tmax, delta_t)
+        tavg.append(resi[7])
+        cvavg.append(resi[8])
+    tlist.append(np.mean(tavg))
+    cvlist.append(np.mean(cvavg))
+
+fig, ax = plt.subplots(2,1)
+ax[0].plot(flist, 1/np.array(tlist))
+ax[1].plot(flist, cvlist)
+# =============================================================================
+# ax[0].plot(flist, 1/tmean(flist, tauv, gz, k, pr, vb, cz, kvz, kthz, M))
+# =============================================================================
+# =============================================================================
+# ax[0].plot(flist, 1/tmean2(gz, k, flist, pr, vb, cz, kthz, kvz, M))
+# =============================================================================
+ax[0].plot(flist, 1/tmean3(tauv, cz, flist, k, kvz, M, pr, kthz, tauvth, gz, vb))
+        
