@@ -149,94 +149,94 @@ def get_vth(vth, v, cvth, alpha, cv):
 #
 ###############################################################################
 
-
-
-f=100
-pr=0.2
-M=100
-k=20
-c=0.015
-
-n=0 # occupied states
-v=0
-vth=0.2
-
-delta_t = 0.01
-tmax = 30 # <-------------- TMAX
-navgs=3
-
-vthlist = [0.2]
-xlist=np.linspace(0,200,100)
-
 # =============================================================================
-# res = simulate(n, v, f, pr, M, k, c, vth, tmax, delta_t)
-# plt.plot(res[9], res[10])
-# #%%
 # 
+# 
+# f=100
+# pr=0.2
+# M=100
+# k=20
+# c=0.015
+# 
+# n=0 # occupied states
+# v=0
+# vth=0.2
+# 
+# delta_t = 0.01
+# tmax = 30 # <-------------- TMAX
+# navgs=3
+# 
+# vthlist = [0.2]
+# xlist=np.linspace(0,200,100)
+# 
+# # =============================================================================
+# # res = simulate(n, v, f, pr, M, k, c, vth, tmax, delta_t)
+# # plt.plot(res[9], res[10])
+# # #%%
+# # 
+# # =============================================================================
+# def getres(vallist, xlist):
+#     tavgs=[]
+#     for val in vallist:
+#         vth=val
+#         tavg=[]
+#         for j, x in enumerate(xlist):
+#             f=x
+#             tmean=[]
+#             for i in range(navgs):
+#                 print(j, len(xlist), i, navgs)
+#                 res=simulate(n, v, f, pr, M, k, c, vth, tmax, delta_t)
+#                 tmean.append(res[6])
+#             tavg.append(np.mean(tmean))
+#         tavgs.append(tavg)
+#     return np.array(tavgs)
+# 
+# tavgs=getres(vthlist, xlist)
+# 
+# for i in range(len(vthlist)):
+#     plt.plot(xlist, 1/tavgs[i], label="vth={}".format(vthlist[i]))
+# plt.legend()
+# plt.show()
+# 
+# #%% Sim 2
 # =============================================================================
-def getres(vallist, xlist):
-    tavgs=[]
-    for val in vallist:
-        vth=val
-        tavg=[]
-        for j, x in enumerate(xlist):
-            f=x
-            tmean=[]
-            for i in range(navgs):
-                print(j, len(xlist), i, navgs)
-                res=simulate(n, v, f, pr, M, k, c, vth, tmax, delta_t)
-                tmean.append(res[6])
-            tavg.append(np.mean(tmean))
-        tavgs.append(tavg)
-    return np.array(tavgs)
-
-tavgs=getres(vthlist, xlist)
-
-for i in range(len(vthlist)):
-    plt.plot(xlist, 1/tavgs[i], label="vth={}".format(vthlist[i]))
-plt.legend()
-plt.show()
-
-#%% Sim 2
 f=100
 pr=0.2
-M=100
-k=10
-c=0.01
+M=75
+k=5
+c=0.05
 tauv=1
-tauvth=0.01
+tauvth=0.5
 
 n=0 # occupied states
 v=0
 
-vthb=0.1
+vthb=0.2
 vth=vthb
 
 # alpha = 0  constant jumps
 # cvth = 0  fixed threshold
 
 cvth=0.01
-alpha=0
 cv=vthb #0.1
 
 delta_t = 0.01
 tmax = 30 # <-------------- TMAX
 
-navgs=20
+navgs=10
 
-vthlist = [0.1, 0.12, 0.14]
-xlist=np.linspace(0,200,100)
+ylist = [0,1,2]
+xlist=np.concat([np.linspace(0.1,100,50), np.linspace(100+0.1,400,50)])
 
 # =============================================================================
 # res = simulate(n, v, f, pr, M, k, c, vth, tmax, delta_t)
 # plt.plot(res[9], res[10])
 # #%%
-# 
 # =============================================================================
 def getres(vallist, xlist):
     tavgs=[]
     for ii, val in enumerate(vallist):
-        vthb=val
+        alpha=val
         tavg=[]
         for j, x in enumerate(xlist):
             f=x
@@ -249,9 +249,34 @@ def getres(vallist, xlist):
         tavgs.append(tavg)
     return np.array(tavgs)
 
-tavgs=getres(vthlist, xlist)
+def getres2(vallist, xlist):
+    tavgs=[]
+    for ii, val in enumerate(vallist):
+        tavg=[]
+        for j, x in enumerate(xlist):
+            f=x
+            tmean=[]
+            for i in range(navgs):
+                print(ii, len(vallist), j, len(xlist), i, navgs)
+                res=simulate2(n, v, f, pr, M, k, c, vth, tauv, tauvth, vthb, 0, cv, 0, tmax, delta_t)
+                tmean.append(res[6])
+            tavg.append(np.mean(tmean))
+        tavgs.append(tavg)
+    return np.array(tavgs)[0]
 
-for i in range(len(vthlist)):
-    plt.plot(xlist, 1/tavgs[i], label="vth={}".format(vthlist[i]))
+tavgs=getres(ylist, xlist)
+tavgsf=getres2([0], xlist)
+    
+plt.scatter(xlist, 1/np.array(tavgsf), color='k')
+
+cs=['r', 'g', 'b']
+
+for i in range(len(ylist)):
+    plt.scatter(xlist, 1/tavgs[i], label="y={}".format(ylist[i]), color=cs[i])
 plt.legend()
 plt.show() 
+
+
+for tavg in tavgs:
+    if (xlist-tavg<0).any():
+        print('Error')
