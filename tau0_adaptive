@@ -205,7 +205,6 @@ pr=0.2
 M=75
 k=5
 c=0.05
-tauv=1
 tauvth=0.5
 
 n=0 # occupied states
@@ -223,10 +222,13 @@ cv=vthb #0.1
 delta_t = 0.01
 tmax = 30 # <-------------- TMAX
 
-navgs=10
+navgs=100
 
 ylist = [0,1,2]
-xlist=np.concat([np.linspace(0.1,100,50), np.linspace(100+0.1,400,50)])
+# =============================================================================
+# xlist=np.concatenate([np.linspace(0.1,100,50), np.linspace(100+0.1,400,50)])
+# =============================================================================
+xlist = np.linspace(0.1, 400, 100)
 
 # =============================================================================
 # res = simulate(n, v, f, pr, M, k, c, vth, tmax, delta_t)
@@ -243,9 +245,9 @@ def getres(vallist, xlist):
             tmean=[]
             for i in range(navgs):
                 print(ii, len(vallist), j, len(xlist), i, navgs)
-                res=simulate2(n, v, f, pr, M, k, c, vth, tauv, tauvth, vthb, cvth, cv, alpha, tmax, delta_t)
-                tmean.append(res[6])
-            tavg.append(np.mean(tmean))
+                res=simulate2(n, v, f, pr, M, k, c, vth, None, tauvth, vthb, cvth, cv, alpha, tmax, delta_t)
+                tmean.append(res[7]) # 6 Tmean, 7 CV2
+            tavg.append(np.mean(tmean)) 
         tavgs.append(tavg)
     return np.array(tavgs)
 
@@ -258,25 +260,33 @@ def getres2(vallist, xlist):
             tmean=[]
             for i in range(navgs):
                 print(ii, len(vallist), j, len(xlist), i, navgs)
-                res=simulate2(n, v, f, pr, M, k, c, vth, tauv, tauvth, vthb, 0, cv, 0, tmax, delta_t)
-                tmean.append(res[6])
+                res=simulate2(n, v, f, pr, M, k, c, vth, None, tauvth, vthb, 0, cv, 0, tmax, delta_t)
+                tmean.append(res[7])
             tavg.append(np.mean(tmean))
         tavgs.append(tavg)
     return np.array(tavgs)[0]
 
 tavgs=getres(ylist, xlist)
 tavgsf=getres2([0], xlist)
-    
-plt.scatter(xlist, 1/np.array(tavgsf), color='k')
+  
+#%%  
+plt.scatter(xlist, 1/np.array(tavgsf), color='k', marker='^')
 
 cs=['r', 'g', 'b']
-
+ms=['o', 'x', 's']
+fs=15
 for i in range(len(ylist)):
-    plt.scatter(xlist, 1/tavgs[i], label="y={}".format(ylist[i]), color=cs[i])
+    plt.scatter(xlist, 1/tavgs[i], label="y={}".format(ylist[i]), color=cs[i],
+                marker=ms[i])
 plt.legend()
+# =============================================================================
+# plt.ylim([0,3])
+# =============================================================================
+plt.tick_params(axis='both', labelsize=fs)
 plt.show() 
 
 
 for tavg in tavgs:
     if (xlist-tavg<0).any():
         print('Error')
+        
