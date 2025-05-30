@@ -131,12 +131,18 @@ cv=vthb #0.1
 delta_t = 0.001
 tmax = 20 # 30 # <-------------- TMAX
 
-flist=np.linspace(1, 200, 100)
+flist=np.linspace(1, 300, 200)
 # xlist2=np.linspace(xlist[0], xlist[-1], len(xlist))
 
-alist=[0,1,2, 0]
+# =============================================================================
+# test=simulate(n, v, f, pr, M, k, c, vth, tauv, tauvth, vthb, cvth, cv, alist[1], tmax, delta_t)
+# test[6], test[7]
+# #%%
+# =============================================================================
 
-navgs = 30 # 20
+alist=[0,1,2,0]
+
+navgs = 10 # 20
 
 Tlist=[]
 Clist=[]
@@ -147,22 +153,23 @@ for i in range(len(alist)):
         tlistavg=np.zeros(navgs)
         clistavg=np.zeros(navgs)
         for j in range(navgs):
-            if i != 3:
-                res=simulate(n, v, f, pr, M, k, c, vth, tauv, tauvth, 
-                         vthb, cvth, cv, alpha, tmax, delta_t)
-            else:
+            if i == 3:
                 res=simulate(n, v, f, pr, M, k, c, vth, tauv, tauvth, 
                          vthb, 0, cv, 0, tmax, delta_t)
-            print(i, len(alist), fi, len(flist))
-            tmean=res[6]
-            cv=res[7]
-            tlistavg[j]=tmean
-            clistavg[j]=cv
+            else:
+                res=simulate(n, v, f, pr, M, k, c, vth, tauv, tauvth, 
+                         vthb, cvth, cv, alist[i], tmax, delta_t)
+            print(i, len(alist), fi, len(flist), j, navgs)
+            tlistavg[j]=res[6]
+            clistavg[j]=res[7]
         tlistf[fi]=np.mean(tlistavg)
         clistf[fi]=np.mean(clistavg)
-    Tlist[i]=tlistf
-    Clist[i]=clistf
+    Tlist.append(tlistf)
+    Clist.append(clistf)
             
+
+#%%
+
 plt.rcParams.update({'font.size': 15})  # Set font size globally
 cs=['r', 'g', 'b', 'k']
 ms=['o', 'x', 's','^']
@@ -187,9 +194,10 @@ plt.scatter(flist, 1/Tlist[1], color=cs[1], marker=ms[1])
 plt.scatter(flist, 1/Tlist[2], color=cs[2], marker=ms[2])
 plt.scatter(flist, 1/Tlist[3], color=cs[3], marker=ms[3])
 plt.xlabel('Input frequency (Hz)')
-
-plt.figure(figsize=(4,3.4))
-plt.ylabel('Noise in postsynaptic\nfiring time')
+#%%
+fs=20
+plt.figure(figsize=(6,4))
+plt.ylabel('Noise in postsynaptic\nfiring time', fontsize=fs)
 # =============================================================================
 # plt.plot(xlist2, 1/Tlist[0], 
 #            linewidth=lw, color=cs[0], alpha=0.6)
@@ -205,6 +213,66 @@ plt.scatter(flist, 1/Clist[0], color=cs[0], marker=ms[0], label='a=0')
 plt.scatter(flist, 1/Clist[1], color=cs[1], marker=ms[1], label='a=1')
 plt.scatter(flist, 1/Clist[2], color=cs[2], marker=ms[2], label='a=2')
 plt.scatter(flist, 1/Clist[3], color=cs[3], marker=ms[3], label='Fixed')
-plt.xlabel('Input frequency (Hz)')
+plt.xlabel('Input frequency (Hz)', fontsize=fs)
+plt.tick_params(axis='both', labelsize=fs)
+plt.legend()
+plt.show()
+
+
+#%% Test 2 X vs max 
+
+f=100
+pr=0.1
+M=100
+k=100
+c=0.01
+tauv=np.inf
+tauvth=1
+
+n=0 # occupied states
+v=0
+
+vthb=0.2
+vth=vthb
+
+# alpha = 0  constant jumps
+# cvth = 0  fixed threshold
+
+cvth=0.03 #0.01
+alpha=1
+cv=vthb #0.1
+
+delta_t = 0.001
+tmax = 20 # 30 # <-------------- TMAX
+
+flist=np.linspace(1, 100, 100)
+
+ylist = [0.01, 0.2, 0.5, 0.7, 1]
+
+navgs = 10 # 20
+
+Tlist=[]
+Clist=[]
+for i in range(len(ylist)):
+    tlistf=np.zeros_like(flist)
+    clistf=np.zeros_like(flist)
+    for fi, f in enumerate(flist):
+        tlistavg=np.zeros(navgs)
+        clistavg=np.zeros(navgs)
+        for j in range(navgs):
+            pr=ylist[i]
+            res=simulate(n, v, f, pr, M, k, c, vth, tauv, tauvth, 
+                     vthb, cvth, cv, 2, tmax, delta_t)
+            print(i, len(ylist), fi, len(flist), j, navgs)
+            tlistavg[j]=res[6]
+            clistavg[j]=res[7]
+        tlistf[fi]=np.mean(tlistavg)
+        clistf[fi]=np.mean(clistavg)
+    Tlist.append(np.max(1/np.array(tlistf)))
+    Clist.append(np.max(clistf))
+    
+    
+plt.plot(Tlist, label='f')
+plt.plot(Clist, label='c')
 plt.legend()
 plt.show()
